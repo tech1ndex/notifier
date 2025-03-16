@@ -3,6 +3,7 @@ from typing import Any
 from epicstore_api import EpicGamesStoreAPI
 from src.notifier.settings import EpicSettings
 
+
 class EpicFreeGames:
     def __init__(self, settings: EpicSettings) -> None:
         self.settings = settings
@@ -25,6 +26,6 @@ class EpicFreeGames:
                 'name': name,
                 'original_price': original_price,
                 'discount_price': discount_price,
-                'store_url': store_url
+                'store_url': store_url,
             })
         return games_info

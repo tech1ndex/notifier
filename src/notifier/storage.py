@@ -2,6 +2,7 @@ import json
 import os
 from typing import Set
 
+
 class SentGamesStorage:
     def __init__(self, file_path: str = "sent_games.json"):
         self.file_path = file_path
@@ -9,7 +10,7 @@ class SentGamesStorage:
 
     def _load_sent_games(self) -> Set[str]:
         if os.path.exists(self.file_path):
-            with open(self.file_path, "r") as f:
+            with open(self.file_path) as f:
                 return set(json.load(f))
         return set()
 

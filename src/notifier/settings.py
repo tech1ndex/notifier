@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class EpicSettings(BaseSettings):
     country: str = "CA"
 

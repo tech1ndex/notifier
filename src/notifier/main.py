@@ -1,11 +1,13 @@
 import logging
 import sys
 import time
-from logger.setup import setup_logger
+
 from bot.signal import SignalBot
 from external.epic import EpicFreeGames
-from settings import SignalBotSettings, EpicSettings
+from logger.setup import setup_logger
+from settings import EpicSettings, SignalBotSettings
 from storage import SentGamesStorage
+
 
 def main():
     setup_logger()
