@@ -55,6 +55,8 @@ python="^3.12"
 pydantic = "^2.0.0"
 requests = "^2.32.3"
 logging = "^0.4.9.6"
+epicstore-api = "^0.1.9"
+
 
 
 

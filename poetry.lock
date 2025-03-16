@@ -251,6 +251,20 @@ files = [
 ]
 
 [[package]]
+name = "epicstore-api"
+version = "0.1.9"
+description = "An API wrapper for Epic Games Store written in Python"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "epicstore_api-0.1.9.tar.gz", hash = "sha256:4f92571861dd01b366d0a342a0e1e143ad0e1e66057ac6e76ab26c446f772a30"},
+]
+
+[package.dependencies]
+requests = ">=2.28.1"
+
+[[package]]
 name = "filelock"
 version = "3.18.0"
 description = "A platform independent file lock."
@@ -756,4 +770,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "7cefdd11c0eedaac9aea28f22330f6a7185cabb01a97236d8fcd9721b549d1c0"
+content-hash = "bc73a910e911e03eeba0e405aa813755125dc3d3660a630585cef0ae0b7aa3e7"
