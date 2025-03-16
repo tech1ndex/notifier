@@ -8,5 +8,3 @@ jobs:
     steps:
       - name: ruff-action
         uses: astral-sh/ruff-action@v3.2.1
-        with:
-          src: "./src"
