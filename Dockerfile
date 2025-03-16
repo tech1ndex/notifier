@@ -16,6 +16,6 @@ COPY pyproject.toml poetry.lock* /app/
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
-COPY ./src/wimip /app/
+COPY ./src/notifier /app/
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["python", "main.py"]

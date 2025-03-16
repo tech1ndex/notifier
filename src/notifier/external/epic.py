@@ -1,10 +1,10 @@
 from typing import Any
 
 from epicstore_api import EpicGamesStoreAPI
-from src.notifier.settings import Settings
+from src.notifier.settings import EpicSettings
 
 class EpicFreeGames:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: EpicSettings) -> None:
         self.settings = settings
 
     def client(self) -> EpicGamesStoreAPI:
@@ -28,10 +28,3 @@ class EpicFreeGames:
                 'store_url': store_url
             })
         return games_info
-
-"""
-    for game in games_info:
-        print(f"Name: {game['name']}, Original Price: {game['original_price']}, "
-                f"Discount Price: {game['discount_price']}, URL: {game['store_url']}")
-"""
-
