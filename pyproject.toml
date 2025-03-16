@@ -16,7 +16,7 @@ omit = [
 name = "notifier"
 version = "0.1.0"
 description = "Notifies a Signal Group when new Free Games are available on Epic Games Store."
-
+package-mode = false
 packages = [
     { include = "notifier", from = "src" },
 ]
