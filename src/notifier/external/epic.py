@@ -1,7 +1,7 @@
 from typing import Any
 
 from epicstore_api import EpicGamesStoreAPI
-from src.notifier.settings import EpicSettings
+from ..settings import EpicSettings
 
 
 class EpicFreeGames:
