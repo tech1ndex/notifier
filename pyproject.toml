@@ -63,8 +63,7 @@ types-requests = "^2.32.0.20250306"
 
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.13.0"
-
+mypy = "*"
 
 [tool.poetry.group.linters]
 optional = true
@@ -192,37 +191,18 @@ max-complexity = 10
 "tests/*" = ["ANN", "ARG", "INP001", "S101",]
 "src/*" = ["ANN", "ARG", "INP001", "S101", "D102", "D100", "D101", "D103", "D104", "D105", "D106", "D107", "TC002"]
 
-
-[tool.ruff.pylint]
-max-args = 15
-max-branches = 20
-max-returns = 10
-max-statements = 80
-
-
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
 
 
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py38, py39, py310, py311, pypy3
-skip_missing_interpreters = true
+[tool.mypy]
+python_version = "3.12"
+strict = false
+explicit_package_bases = true
+namespace_packages = true
+plugins = ["pydantic.mypy"]
+exclude = ["tests/"]
 
-[gh-actions]
-python =
-    3.8: py38
-    3.9: py39
-    3.10: py310
-    3.11: py311
-    pypy-3.10: pypy3
-
-[testenv]
-passenv = GITHUB_*
-allowlist_externals = poetry
-
-commands =
-    poetry run pytest
-    poetry run coverage report
-"""
+[[tool.mypy.overrides]]
+module = ["epicstore_api.*"]
+ignore_missing_imports = true
