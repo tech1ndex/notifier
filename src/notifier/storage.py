@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from settings import EpicSettings
 
 
 class SentGamesStorage:
-    def __init__(self, file_path: str = "sent_games.json"):
-        self.file_path = file_path
+    def __init__(self):
+        settings = EpicSettings()
+        self.settings = settings
+        self.file_path = self.settings.sent_games_file_path
         self.sent_games: set[str] = self._load_sent_games()
 
     def _load_sent_games(self) -> set[str]:
