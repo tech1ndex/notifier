@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
 
@@ -23,11 +23,12 @@ class SignalBot:
             "Content-Type": "application/json",
         }
 
-        response = requests.post(endpoint, headers=headers, data=json.dumps(payload))
+        response = requests.post(endpoint, headers=headers, data=json.dumps(payload), timeout=10)
 
-        if response.status_code == 201:
-            logging.info(f"Message sent successfully at {datetime.now()}")
+        success_code = 201
+        if response.status_code == success_code:
+            logging.info("Message sent successfully at %s", datetime.now(tz=timezone.utc))
             return response.json()
-        logging.error(f"Failed to send message. Status code: {response.status_code}")
-        logging.error(f"Response: {response.text}")
+        logging.error("Failed to send message. Status code: %s", response.status_code)
+        logging.error("Response: %s", response.text)
         return None
