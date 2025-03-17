@@ -21,7 +21,9 @@ class EpicFreeGames:
             name = game['title']
             original_price = game['price']['totalPrice']['fmtPrice']['originalPrice']
             discount_price = game['price']['totalPrice']['fmtPrice']['discountPrice']
-            url_slug = game['catalogNs']['mappings'][0]['pageSlug'] if game['catalogNs']['mappings'] else game['urlSlug']
+            url_slug = game['catalogNs']['mappings'][0]['pageSlug'] \
+                if game['catalogNs']['mappings'] \
+                else game['urlSlug']
             store_url = f"https://store.epicgames.com/en-US/p/{url_slug}"
 
             games_info.append({
