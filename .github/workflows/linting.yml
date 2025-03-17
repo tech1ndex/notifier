@@ -36,4 +36,4 @@ jobs:
           poetry install
 
       - name: Run MyPy
-        run: poetry run mypy
+        run: poetry run mypy src/
