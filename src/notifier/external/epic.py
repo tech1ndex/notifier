@@ -48,3 +48,4 @@ class EpicFreeGames:
                     'game_url': game_url,
                 })
                 return games_info
+            return None
