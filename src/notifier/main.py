@@ -22,10 +22,11 @@ def main():
 
     try:
         while True:
-            games = epic.format_games_info()
+            games = epic.get_free_games()
             for game in games:
                 if not storage.is_game_sent(game["store_url"]):
-                    message = f"New free game - {game['name']} - {game['store_url']}"
+                    message = (f"* {game['game_title']} {game['game_price']} is FREE now, "
+                               f"until {game['end_date']} --> {game['game_url']}")
                     if bot.send_group_message(group_id=group_id, message=message):
                         storage.mark_game_sent(game["store_url"])
 
