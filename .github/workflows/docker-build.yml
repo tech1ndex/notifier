@@ -43,3 +43,9 @@ jobs:
           tags: ghcr.io/tech1ndex/notifier:${{ github.event.release.tag_name }}-amd64
           platforms: linux/amd64
           push: true
+      -
+        name: Create and Push manifest
+        run: |
+          docker buildx imagetools create -t ghcr.io/tech1ndex/notifier:latest \
+            ghcr.io/tech1ndex/notifier:${{ github.event.release.tag_name }}-amd64 \
+            ghcr.io/tech1ndex/notifier:${{ github.event.release.tag_name }}-arm64
