@@ -38,10 +38,7 @@ class EpicFreeGames:
 
             if game_promotions and game['price']['totalPrice']['discountPrice'] == 0:
                 promotion_data = game_promotions[0]['promotionalOffers'][0]
-                start_date_iso, end_date_iso = (
-                    promotion_data['startDate'][:-1],
-                    promotion_data['endDate'][:-1],
-                )
+                end_date_iso = promotion_data['endDate'][:-1]
 
                 end_date = datetime.fromisoformat(end_date_iso)
                 games_info.append({
