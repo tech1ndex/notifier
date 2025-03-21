@@ -15,7 +15,7 @@ class EpicFreeGames:
     def client(self) -> EpicGamesStoreAPI:
         return EpicGamesStoreAPI(country=self.settings.country)
 
-    def get_free_games(self) -> list[dict[str, datetime | str | Any]] | None:
+    def get_free_games(self) -> list[dict[str, datetime | str | Any]]:
         api = self.client()
         free_games = api.get_free_games()['data']['Catalog']['searchStore']['elements']
 
@@ -47,5 +47,4 @@ class EpicFreeGames:
                     'end_date': end_date,
                     'game_url': game_url,
                 })
-                return games_info
-            return None
+            return games_info
