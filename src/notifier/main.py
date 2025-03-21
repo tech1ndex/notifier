@@ -28,7 +28,7 @@ def main():
                     message = (f"* {game['game_title']} {game['game_price']} is FREE now, "
                                f"until {game['end_date']} --> {game['game_url']}")
                     if bot.send_group_message(group_id=group_id, message=message):
-                        storage.mark_game_sent(game["store_url"])
+                        storage.mark_game_sent(game['game_url'])
 
             if signal_settings.one_time_run:
                 logging.info("One-time run completed. Exiting.")
