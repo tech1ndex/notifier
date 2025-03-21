@@ -47,4 +47,4 @@ class EpicFreeGames:
                     'end_date': end_date,
                     'game_url': game_url,
                 })
-            return games_info
+        return games_info
