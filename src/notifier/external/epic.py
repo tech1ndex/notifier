@@ -42,8 +42,8 @@ class EpicFreeGames:
 
                 end_date = datetime.fromisoformat(end_date_iso)
                 games_info.append({
-                    'name': game_title,
-                    'original_price': game_price,
+                    'game_title': game_title,
+                    'game_price': game_price,
                     'end_date': end_date,
                     'game_url': game_url,
                 })
