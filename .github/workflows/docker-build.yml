@@ -28,7 +28,7 @@ jobs:
           registry: ghcr.io
       -
         name: Build and Push arm64
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           tags:
@@ -37,7 +37,7 @@ jobs:
           push: true
       -
          name: Build and Push amd64
-         uses: docker/build-push-action@v3
+         uses: docker/build-push-action@v6
          with:
           context: .
           tags: ghcr.io/tech1ndex/notifier:${{ github.event.release.tag_name }}-amd64
