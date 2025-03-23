@@ -169,8 +169,7 @@ ignore = [
 ]
 ignore-init-module-imports = true
 line-length = 120
-# preview = true
-show-fixes = true
+fix = true
 src = ["src",]
 target-version = "py38"
 
