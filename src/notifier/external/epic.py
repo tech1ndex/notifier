@@ -28,9 +28,10 @@ class EpicFreeGames:
         for game in free_games_sorted:
             game_title = game['title']
             url_type = "bundles" if game['offerType'] == "BUNDLE" else "p"
-            final_slug = game["catalogNs"]["mappings"][0]["pageSlug"] if game["catalogNs"]["mappings"] else game[
+            final_slug = game["productSlug"] if game["productSlug"] else game[
                 "urlSlug"]
-            game_url = f"https://store.epicgames.com/en/{url_type}/{final_slug}"
+
+            game_url = f"https://store.epicgames.com/en-US/{url_type}/{final_slug}"
 
             game_price = game['price']['totalPrice']['fmtPrice']['originalPrice']
 
