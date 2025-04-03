@@ -82,7 +82,7 @@ wimip = "notifier.main:main"
 [tool.poetry.group.tests.dependencies]
 pytest = "^8.3.3"
 pytest-cov = "^6.0.0"
-tox = "^4.23.2"
+tox = "^4.25.0"
 tox-gh-actions = "^3.2.0"
 
 
