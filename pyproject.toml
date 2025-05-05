@@ -52,11 +52,11 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python="^3.12"
-pydantic = "^2.11.2"
+pydantic = "^2.11.4"
 requests = "^2.32.3"
 logging = "^0.4.9.6"
 epicstore-api = "^0.1.9"
-pydantic-settings = "^2.8.1"
+pydantic-settings = "^2.9.1"
 types-requests = "^2.32.0.20250328"
 
 
@@ -70,7 +70,7 @@ optional = true
 
 
 [tool.poetry.group.linters.dependencies]
-ruff = "^0.11.4"
+ruff = "^0.11.8"
 
 
 [tool.poetry.group.tests]
