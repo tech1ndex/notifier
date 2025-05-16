@@ -6,7 +6,7 @@ from src.notifier.bot.signal import SignalBot
 from src.notifier.external.epic import EpicFreeGames
 from src.notifier.external.unifi import UnifiStockChecker
 from src.notifier.logger.setup import setup_logger
-from src.notifier.settings import EpicSettings, SignalBotSettings, UnifiStoreSettings
+from src.notifier.settings import Settings, EpicSettings, SignalBotSettings, UnifiStoreSettings
 from src.notifier.storage import SentGamesStorage
 
 
@@ -57,4 +57,5 @@ def main(store: str):
 
 
 if __name__ == "__main__":
-    main(store="unifi")
+    settings = Settings()
+    main(store=settings.external_store)
