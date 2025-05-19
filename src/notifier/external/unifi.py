@@ -5,16 +5,13 @@ import json
 import requests
 from bs4 import BeautifulSoup
 from src.notifier.settings import UnifiStoreSettings
-from tenacity import retry, stop_after_attempt
+from tenacity import retry, stop_after_attempt, retry_if_result, wait_fixed
 
 
 class UnifiStockChecker:
     def __init__(self, settings: UnifiStoreSettings) -> None:
         self.settings = settings
 
-    @retry(
-        stop=stop_after_attempt(1),
-    )
     def get_webpage_data(self) -> BeautifulSoup | None:
         url = (
             f"{self.settings.base_url}/category/cloud-gateways-compact/collections/cloud-gateway-max/products/"
@@ -43,6 +40,11 @@ class UnifiStockChecker:
                 return json_data["offers"]["availability"]
         return None
 
+    @retry(
+        stop=stop_after_attempt(100),
+        wait=wait_fixed(120),
+        retry=retry_if_result(lambda result: result == "https://schema.org/OutOfStock"),
+    )
     def check_availability(self) -> bool:
         availability = self.get_availability()
         return availability != "https://schema.org/OutOfStock"

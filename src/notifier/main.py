@@ -14,12 +14,10 @@ def main(store: str):
     setup_logger()
     signal_settings = SignalBotSettings()
     bot = SignalBot(signal_settings.signal_api_url, signal_settings.signal_phone)
-    storage = SentGamesStorage()
     logging.info("Bot initialized for %s", signal_settings.signal_phone)
 
     group_id = signal_settings.signal_group_id
-    epic_settings = EpicSettings()
-    epic = EpicFreeGames(epic_settings)
+
     if store == "unifi":
         unifi_settings = UnifiStoreSettings()
         unifi = UnifiStockChecker(unifi_settings)
@@ -35,6 +33,9 @@ def main(store: str):
                 message=message,
             )
     elif store == "epic":
+        storage = SentGamesStorage()
+        epic_settings = EpicSettings()
+        epic = EpicFreeGames(epic_settings)
         try:
             while True:
                 games = epic.get_free_games()
