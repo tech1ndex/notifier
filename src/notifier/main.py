@@ -21,7 +21,9 @@ def main(store: str):
     if store == "unifi":
         unifi_settings = UnifiStoreSettings()
         unifi = UnifiStockChecker(unifi_settings)
-        if unifi.check_availability():
+        logging.info("Waiting for Unifi Device to be in stock...")
+        availability = unifi.check_availability()
+        if availability:
             url = (
                 f"{unifi_settings.base_url}/category/cloud-gateways-compact/collections/cloud-gateway-max/products/"
                 f"{unifi_settings.model}?variant={unifi_settings.model}"
@@ -59,4 +61,5 @@ def main(store: str):
 
 if __name__ == "__main__":
     settings = Settings()
-    main(store=settings.external_store)
+    #main(store=settings.external_store)
+    main("unifi")

@@ -5,7 +5,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 from src.notifier.settings import UnifiStoreSettings
-from tenacity import retry, stop_after_attempt, retry_if_result, wait_fixed
+from tenacity import retry, retry_if_result, wait_fixed, stop_after_delay
 
 
 class UnifiStockChecker:
@@ -41,10 +41,9 @@ class UnifiStockChecker:
         return None
 
     @retry(
-        stop=stop_after_attempt(100),
-        wait=wait_fixed(120),
-        retry=retry_if_result(lambda result: result == "https://schema.org/OutOfStock"),
+        stop=stop_after_delay(3600),
+        wait=wait_fixed(60),
+        retry=retry_if_result(lambda result: result is False),
     )
     def check_availability(self) -> bool:
-        availability = self.get_availability()
-        return availability != "https://schema.org/OutOfStock"
+        return self.get_availability() != "https://schema.org/OutOfStock"
