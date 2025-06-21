@@ -2,11 +2,11 @@ import logging
 import sys
 import time
 
-from bot.signal import SignalBot
-from external.epic import EpicFreeGames
-from logger.setup import setup_logger
-from settings import EpicSettings, SignalBotSettings
-from storage import SentGamesStorage
+from src.notifier.bot.signal import SignalBot
+from src.notifier.external.epic import EpicFreeGames
+from src.notifier.logger.setup import setup_logger
+from src.notifier.settings import EpicSettings, SignalBotSettings
+from src.notifier.storage import SentGamesStorage
 
 
 def main():
@@ -22,13 +22,11 @@ def main():
 
     try:
         while True:
-            games = epic.get_free_games()
-            for game in games:
-                if not storage.is_game_sent(game['game_url']):
-                    message = (f"* {game['game_title']} {game['game_price']} is FREE now, "
-                               f"until {game['end_date']} --> {game['game_url']}")
+            for game in epic.format_free_games():
+                if not storage.is_game_sent(game.game_url):
+                    message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                     if bot.send_group_message(group_id=group_id, message=message):
-                        storage.mark_game_sent(game['game_url'])
+                        storage.mark_game_sent(game.game_url)
 
             if signal_settings.one_time_run:
                 logging.info("One-time run completed. Exiting.")
@@ -37,6 +35,7 @@ def main():
             time.sleep(signal_settings.update_interval)
     except KeyboardInterrupt:
         logging.info("\nBot stopped by user")
+
 
 if __name__ == "__main__":
     main()
