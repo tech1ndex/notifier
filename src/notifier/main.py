@@ -8,7 +8,6 @@ from logger.setup import setup_logger
 from settings import EpicSettings, SignalBotSettings
 from storage import SentGamesStorage
 
-
 def main():
     setup_logger()
     signal_settings = SignalBotSettings()
@@ -22,13 +21,17 @@ def main():
 
     try:
         while True:
-            games = epic.get_free_games()
-            for game in games:
+            for game in epic.format_free_games():
+                """
                 if not storage.is_game_sent(game['game_url']):
-                    message = (f"* {game['game_title']} {game['game_price']} is FREE now, "
-                               f"until {game['end_date']} --> {game['game_url']}")
+                    message = (f"* {game.game_title} {game.game_price} is FREE now, "
+                           f"--> {game.game_url}")
                     if bot.send_group_message(group_id=group_id, message=message):
                         storage.mark_game_sent(game['game_url'])
+                """
+                message = (f"* {game.game_title} {game.game_price} is FREE now, "
+                           f"--> {game.game_url}")
+                logging.info(message)
 
             if signal_settings.one_time_run:
                 logging.info("One-time run completed. Exiting.")
