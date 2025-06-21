@@ -22,16 +22,11 @@ def main():
     try:
         while True:
             for game in epic.format_free_games():
-                """
                 if not storage.is_game_sent(game['game_url']):
                     message = (f"* {game.game_title} {game.game_price} is FREE now, "
                            f"--> {game.game_url}")
                     if bot.send_group_message(group_id=group_id, message=message):
-                        storage.mark_game_sent(game['game_url'])
-                """
-                message = (f"* {game.game_title} {game.game_price} is FREE now, "
-                           f"--> {game.game_url}")
-                logging.info(message)
+                        storage.mark_game_sent(game.game_url)
 
             if signal_settings.one_time_run:
                 logging.info("One-time run completed. Exiting.")
