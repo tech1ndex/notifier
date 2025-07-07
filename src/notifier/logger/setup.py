@@ -1,8 +1,11 @@
-import logging
+from loguru import logger
 
 
 def setup_logger():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
+    logger.add(
+        sink=lambda msg: print(msg, end=""),
+        format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {message}",
+        level="INFO"
     )
+
+    return logger
