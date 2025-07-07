@@ -58,6 +58,7 @@ logging = "^0.4.9.6"
 epicstore-api = "^0.1.9"
 pydantic-settings = "^2.10.1"
 types-requests = "^2.32.4.20250611"
+loguru = "^0.7.3"
 
 
 
