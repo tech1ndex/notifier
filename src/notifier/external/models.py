@@ -112,7 +112,7 @@ class EpicGameData(BaseModel):
     effective_date: datetime = Field(alias="effectiveDate")
     offer_type: str = Field(alias="offerType")
     expiry_date: datetime | None = Field(None, alias="expiryDate")
-    viewable_date: datetime = Field(alias="viewableDate")
+    viewable_date: datetime | None = Field(None, alias="viewableDate")
     status: str
     is_code_redemption_only: bool = Field(alias="isCodeRedemptionOnly")
     key_images: list[KeyImage] = Field(alias="keyImages")
@@ -131,7 +131,7 @@ class EpicGameData(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
-
+        validate_by_name = True
 
 class FormattedGame(BaseModel):
     game_title: str
