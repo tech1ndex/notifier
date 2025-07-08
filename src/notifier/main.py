@@ -13,7 +13,7 @@ def main():
     signal_settings = SignalBotSettings()
     bot = SignalBot(signal_settings.signal_api_url, signal_settings.signal_phone)
     storage = SentGamesStorage()
-    logger.info("Bot initialized for %s", signal_settings.signal_phone)
+    logger.info(f"Bot initialized for {signal_settings.signal_phone}")
 
     group_id = signal_settings.signal_group_id
     epic_settings = EpicSettings()
