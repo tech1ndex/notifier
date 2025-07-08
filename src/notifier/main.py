@@ -1,4 +1,3 @@
-import logging
 import sys
 import time
 
@@ -10,11 +9,11 @@ from src.notifier.storage import SentGamesStorage
 
 
 def main():
-    setup_logger()
+    logger = setup_logger()
     signal_settings = SignalBotSettings()
     bot = SignalBot(signal_settings.signal_api_url, signal_settings.signal_phone)
     storage = SentGamesStorage()
-    logging.info("Bot initialized for %s", signal_settings.signal_phone)
+    logger.info("Bot initialized for %s", signal_settings.signal_phone)
 
     group_id = signal_settings.signal_group_id
     epic_settings = EpicSettings()
@@ -29,12 +28,12 @@ def main():
                         storage.mark_game_sent(game.game_url)
 
             if signal_settings.one_time_run:
-                logging.info("One-time run completed. Exiting.")
+                logger.info("One-time run completed. Exiting.")
                 sys.exit(0)
 
             time.sleep(signal_settings.update_interval)
     except KeyboardInterrupt:
-        logging.info("\nBot stopped by user")
+        logger.info("\nBot stopped by user")
 
 
 if __name__ == "__main__":
