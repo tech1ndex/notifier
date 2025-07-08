@@ -1,11 +1,12 @@
+import sys
+
 from loguru import logger
 
 
 def setup_logger():
     logger.add(
-        sink=lambda msg: print(msg, end=""),
+        sink=sys.stdout,
         format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {message}",
-        level="INFO"
+        level="INFO",
     )
-
     return logger
