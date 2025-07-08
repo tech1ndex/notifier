@@ -133,6 +133,7 @@ class EpicGameData(BaseModel):
         allow_population_by_field_name = True
         validate_by_name = True
 
+
 class FormattedGame(BaseModel):
     game_title: str
     game_price: str
