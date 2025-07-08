@@ -310,17 +310,6 @@ files = [
 ]
 
 [[package]]
-name = "logging"
-version = "0.4.9.6"
-description = "A logging module for Python"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417"},
-]
-
-[[package]]
 name = "loguru"
 version = "0.7.3"
 description = "Python logging made (stupidly) simple"
@@ -905,4 +894,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "f23542600b674f44c94fcaf8ea9d7ac2fc11464f0b6a0fc21631fbaf2207e69e"
+content-hash = "bd21f808727481ca3d20c9e5c5b12924d0a94b57677900a950a4bdf9b82cd326"
