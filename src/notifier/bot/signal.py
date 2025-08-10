@@ -36,6 +36,6 @@ class SignalBot:
                 f"Message sent successfully at {datetime.now(tz=timezone.utc)}"
             )
             return response.json()
-        logger.error("Failed to send message. Status code: %s", response.status_code)
-        logger.error("Response: %s", response.text)
+        logger.error("Failed to send message. Status code: {}", response.status_code)
+        logger.error("Response: {}", response.text)
         return None
