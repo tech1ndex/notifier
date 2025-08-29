@@ -13,3 +13,4 @@ class SignalBotSettings(BaseSettings):
     signal_group_id: str = ""
     update_interval: float = 3600.0
     one_time_run: bool = False
+    send_timeout_seconds: int = 15

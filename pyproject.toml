@@ -1,5 +1,5 @@
 [build-system]
-requires = ["poetry-core>=1.2.0", "wheel",]
+requires = ["poetry-core>=2.0.0", "wheel",]
 build-backend = "poetry.core.masonry.api"
 
 
@@ -14,7 +14,7 @@ omit = [
 
 [tool.poetry]
 name = "notifier"
-version = "0.1.0"
+version = "0.2.0"
 description = "Notifies a Signal Group when new Free Games are available on Epic Games Store."
 package-mode = false
 packages = [
@@ -59,6 +59,9 @@ pydantic-settings = "^2.10.1"
 types-requests = "^2.32.4.20250611"
 loguru = "^0.7.3"
 cloudscraper = "^1.2.70"
+tenacity = "^9.1.2"
+pytest-mock = "^3.14.1"
+poetry-core = "^2.1.3"
 
 
 

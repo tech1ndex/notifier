@@ -125,3 +125,7 @@ dmypy.json
 
 #IDE
 .idea/
+
+# AI
+.ai/
+ai/instructions.md
