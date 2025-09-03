@@ -100,19 +100,9 @@ tox-gh-actions = "^3.2.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-minversion = "6.0"
-addopts = """
---doctest-modules \
---cov=./ \
---cov-append \
---cov-report html:tests/reports/coverage-html \
---cov-report xml:tests/reports/coverage.xml \
---ignore=docs/
-"""
 testpaths = [
     "tests",
 ]
-
 
 [tool.ruff]
 select = [
