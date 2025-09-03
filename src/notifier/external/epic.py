@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from epicstore_api import EpicGamesStoreAPI
-from src.notifier.external.models import EpicGameData, FormattedGame
-from src.notifier.settings import EpicSettings
+from notifier.external.models import EpicGameData, FormattedGame
+from notifier.settings import EpicSettings
 
 
 class EpicFreeGames:

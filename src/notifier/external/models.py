@@ -130,7 +130,7 @@ class EpicGameData(BaseModel):
     promotions: Promotions
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         validate_by_name = True
 
 
