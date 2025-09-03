@@ -3,11 +3,11 @@ import time
 import concurrent.futures
 import tenacity
 
-from src.notifier.bot.signal import SignalBot
-from src.notifier.external.epic import EpicFreeGames
-from src.notifier.logger.setup import setup_logger
-from src.notifier.settings import EpicSettings, SignalBotSettings
-from src.notifier.storage import SentGamesStorage
+from notifier.bot.signal import SignalBot
+from notifier.external.epic import EpicFreeGames
+from notifier.logger.setup import setup_logger
+from notifier.settings import EpicSettings, SignalBotSettings
+from notifier.storage import SentGamesStorage
 
 @tenacity.retry(
     stop=tenacity.stop_after_attempt(5),

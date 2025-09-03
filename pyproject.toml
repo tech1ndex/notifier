@@ -28,9 +28,8 @@ include = []
 license = "MIT"
 readme = "README.md"
 
-homepage = "https://pypi.org/project/wimip/"
-repository = "https://github.com/tech1ndex/wimip"
-documentation = "https://github.com/tech1ndex/wimip/tree/main/docs"
+repository = "https://github.com/tech1ndex/notifier"
+documentation = "https://github.com/tech1ndex/notifier/blob/main/README.md"
 
 keywords = [
     "python3",
@@ -81,7 +80,7 @@ ruff = "^0.12.8"
 optional = true
 
 [tool.poetry.scripts]
-wimip = "notifier.main:main"
+notifier = "notifier.main:main"
 
 [tool.poetry.group.tests.dependencies]
 pytest = "^8.4.1"
@@ -96,6 +95,7 @@ tox-gh-actions = "^3.2.0"
 
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 minversion = "6.0"
 addopts = """
 --doctest-modules \
