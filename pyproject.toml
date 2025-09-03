@@ -4,11 +4,15 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.coverage.run]
+source = ["src"]
 branch = true
-relative_files = true
-omit = [
-    ".tox/*",
-    "tests/*",
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
 ]
 
 

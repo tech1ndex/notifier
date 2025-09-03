@@ -1,17 +1,12 @@
-import pytest
-import tempfile
-import os
-from src.notifier.storage import SentGamesStorage
-from src.notifier.main import send_with_timeout
-from src.notifier.bot.signal import SignalBot
+from notifier.storage import SentGamesStorage
+from notifier.main import send_with_timeout
+
 
 class DummyBot:
     def send_group_message(self, group_id: str, message: str):
         return True
 
 def test_sent_games_storage_states(tmp_path):
-    file_path = tmp_path / "sent_games.json"
-    os.environ["EPIC_SENT_GAMES_FILE_PATH"] = str(file_path)
     storage = SentGamesStorage()
     url = "http://game.url/1"
     assert storage.get_game_state(url) is None
@@ -21,7 +16,6 @@ def test_sent_games_storage_states(tmp_path):
     assert storage.get_game_state(url) == "failed"
     storage.mark_game_sent(url)
     assert storage.get_game_state(url) == "sent"
-    del os.environ["EPIC_SENT_GAMES_FILE_PATH"]
 
 def test_send_with_timeout_success(mocker):
     bot = DummyBot()

@@ -1,5 +1,4 @@
-import pytest_mock
-from src.notifier.storage import SentGamesStorage
+from notifier.storage import SentGamesStorage
 
 def test_failed_message_is_retried() -> None:
     storage = SentGamesStorage()
