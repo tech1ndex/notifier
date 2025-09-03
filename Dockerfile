@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/src
 
 WORKDIR /app
 
@@ -19,4 +19,6 @@ RUN poetry config virtualenvs.create false \
 
 COPY ./src /app/src/
 
-CMD ["python", "src/notifier/main.py"]
+RUN poetry install --no-interaction --no-ansi
+
+CMD ["python", "-m", "notifier"]
