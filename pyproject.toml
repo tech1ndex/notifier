@@ -63,7 +63,7 @@ types-requests = "^2.32.4.20250809"
 loguru = "^0.7.3"
 cloudscraper = "^1.2.70"
 tenacity = "^9.1.2"
-pytest-mock = "^3.14.1"
+pytest-mock = "^3.15.0"
 poetry-core = "^2.1.3"
 
 
