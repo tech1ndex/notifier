@@ -9,7 +9,7 @@ jobs:
       matrix:
         python-version: [ '3.12' ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Python
         uses: actions/setup-python@v6
@@ -28,7 +28,7 @@ jobs:
       matrix:
         python-version: [ '3.12' ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Python
         uses: actions/setup-python@v6
@@ -50,7 +50,7 @@ jobs:
       matrix:
         python-version: ['3.12']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
