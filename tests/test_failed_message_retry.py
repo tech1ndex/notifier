@@ -1,5 +1,6 @@
 from notifier.storage import SentGamesStorage
 
+
 def test_failed_message_is_retried() -> None:
     storage = SentGamesStorage()
     url = "http://game.url/failed"
@@ -11,6 +12,7 @@ def test_failed_message_is_retried() -> None:
     state = storage.get_game_state(url)
     assert state == "pending"
 
+
 def test_sent_and_pending_are_not_retried() -> None:
     storage = SentGamesStorage()
     sent_url = "http://game.url/sent"
@@ -21,4 +23,3 @@ def test_sent_and_pending_are_not_retried() -> None:
     assert storage.get_game_state(pending_url) == "pending"
     assert storage.get_game_state(sent_url) == "sent"
     assert storage.get_game_state(pending_url) == "pending"
-
