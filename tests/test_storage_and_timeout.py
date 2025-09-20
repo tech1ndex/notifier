@@ -1,5 +1,5 @@
-from notifier.storage import SentGamesStorage
 from notifier.main import send_with_timeout
+from notifier.storage import SentGamesStorage
 
 
 class DummyBot:
