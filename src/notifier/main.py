@@ -45,20 +45,23 @@ def main():
         while True:
             for game in epic.format_free_games():
                 state = storage.get_game_state(game.game_url)
-                if state == "sent" or state == "pending":
+                if state in {"sent", "pending"}:
                     continue
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                 storage.mark_game_pending(game.game_url)
                 try:
                     sent = send_with_timeout(
-                        bot, group_id, message, signal_settings.send_timeout_seconds
+                        bot,
+                        group_id,
+                        message,
+                        signal_settings.send_timeout_seconds,
                     )
                     if sent:
                         storage.mark_game_sent(game.game_url)
                     else:
                         storage.mark_game_failed(game.game_url)
                         logger.error(f"Timeout sending message for {game.game_url}")
-                except Exception as e:
+                except (ConnectionError, TimeoutError) as e:
                     storage.mark_game_failed(game.game_url)
                     logger.error(f"Failed to send message after retries: {e}")
 
