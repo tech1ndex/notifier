@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from epicstore_api import EpicGamesStoreAPI
+
 from notifier.external.models import EpicGameData, FormattedGame
 from notifier.settings import EpicSettings
 

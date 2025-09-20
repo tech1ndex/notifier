@@ -1,6 +1,7 @@
+import concurrent.futures
 import sys
 import time
-import concurrent.futures
+
 import tenacity
 
 from notifier.bot.signal import SignalBot
@@ -9,14 +10,16 @@ from notifier.logger.setup import setup_logger
 from notifier.settings import EpicSettings, SignalBotSettings
 from notifier.storage import SentGamesStorage
 
+
 @tenacity.retry(
     stop=tenacity.stop_after_attempt(5),
     wait=tenacity.wait_exponential(multiplier=2, min=2, max=30),
     retry=tenacity.retry_if_result(lambda result: result is None),
-    reraise=True
+    reraise=True,
 )
 def send_with_retry(bot, group_id, message):
     return bot.send_group_message(group_id=group_id, message=message)
+
 
 def send_with_timeout(bot, group_id, message, timeout: int) -> bool:
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
@@ -25,6 +28,7 @@ def send_with_timeout(bot, group_id, message, timeout: int) -> bool:
             return future.result(timeout=timeout)
         except concurrent.futures.TimeoutError:
             return False
+
 
 def main():
     logger = setup_logger()
@@ -41,18 +45,23 @@ def main():
         while True:
             for game in epic.format_free_games():
                 state = storage.get_game_state(game.game_url)
-                if state == "sent" or state == "pending":
+                if state in {"sent", "pending"}:
                     continue
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                 storage.mark_game_pending(game.game_url)
                 try:
-                    sent = send_with_timeout(bot, group_id, message, signal_settings.send_timeout_seconds)
+                    sent = send_with_timeout(
+                        bot,
+                        group_id,
+                        message,
+                        signal_settings.send_timeout_seconds,
+                    )
                     if sent:
                         storage.mark_game_sent(game.game_url)
                     else:
                         storage.mark_game_failed(game.game_url)
                         logger.error(f"Timeout sending message for {game.game_url}")
-                except Exception as e:
+                except (ConnectionError, TimeoutError) as e:
                     storage.mark_game_failed(game.game_url)
                     logger.error(f"Failed to send message after retries: {e}")
 
@@ -63,6 +72,7 @@ def main():
             time.sleep(signal_settings.update_interval)
     except KeyboardInterrupt:
         logger.info("\nBot stopped by user")
+
 
 if __name__ == "__main__":
     main()

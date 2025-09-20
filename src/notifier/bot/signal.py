@@ -1,8 +1,8 @@
 import json
-from loguru import logger
 from datetime import datetime, timezone
 
 import requests
+from loguru import logger
 
 
 class SignalBot:
@@ -33,7 +33,7 @@ class SignalBot:
         success_code = 201
         if response.status_code == success_code:
             logger.info(
-                f"Message sent successfully at {datetime.now(tz=timezone.utc)}"
+                f"Message sent successfully at {datetime.now(tz=timezone.utc)}",
             )
             return response.json()
         logger.error("Failed to send message. Status code: {}", response.status_code)

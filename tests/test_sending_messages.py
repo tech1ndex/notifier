@@ -1,27 +1,38 @@
 import pytest
 import pytest_mock
+from tenacity import RetryError
 
-from notifier.main import send_with_retry
 from notifier.bot.signal import SignalBot
+from notifier.main import send_with_retry
+
 
 def test_retry_mechanism(mocker: pytest_mock.MockerFixture) -> None:
     mocker.patch("time.sleep", return_value=None)
     bot = SignalBot("http://fake-url", "+123456789")
     group_id = "test-group"
     message = "Test message"
-    mock_send = mocker.patch("notifier.bot.signal.SignalBot.send_group_message", new=mocker.MagicMock())
+    mock_send_call_count = 4
+    mock_send = mocker.patch(
+        "notifier.bot.signal.SignalBot.send_group_message",
+        new=mocker.MagicMock(),
+    )
     mock_send.side_effect = [None, None, None, {"status": "success"}]
     result = send_with_retry(bot, group_id, message)
-    assert 4 == mock_send.call_count
-    assert {"status": "success"} == result
+    assert mock_send.call_count == mock_send_call_count
+    assert result == {"status": "success"}
+
 
 def test_retry_exceeds_max_attempts(mocker: pytest_mock.MockerFixture) -> None:
     mocker.patch("time.sleep", return_value=None)
     bot = SignalBot("http://fake-url", "+123456789")
     group_id = "test-group"
     message = "Test message"
-    mock_send = mocker.patch("notifier.bot.signal.SignalBot.send_group_message", new=mocker.MagicMock())
+    mock_send_call_count = 5
+    mock_send = mocker.patch(
+        "notifier.bot.signal.SignalBot.send_group_message",
+        new=mocker.MagicMock(),
+    )
     mock_send.side_effect = [None] * 5
-    with pytest.raises(Exception):
+    with pytest.raises(RetryError):
         send_with_retry(bot, group_id, message)
-    assert 5 == mock_send.call_count
+    assert mock_send.call_count == mock_send_call_count

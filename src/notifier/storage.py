@@ -21,7 +21,7 @@ class SentGamesStorage:
                 if isinstance(data, dict):
                     return data
                 if isinstance(data, list):
-                    return {url: "sent" for url in data}
+                    return dict.fromkeys(data, "sent")
         return {}
 
     def save_states(self) -> None:
