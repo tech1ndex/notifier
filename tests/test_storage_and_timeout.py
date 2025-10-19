@@ -1,3 +1,4 @@
+import os
 from notifier.main import send_with_timeout
 from notifier.storage import SentGamesStorage
 
@@ -8,6 +9,9 @@ class DummyBot:
 
 
 def test_sent_games_storage_states(tmp_path):
+    # Use an ephemeral file so tests are deterministic
+    os.environ["SENT_GAMES_FILE_PATH"] = str(tmp_path / "sent_games.json")
+
     storage = SentGamesStorage()
     url = "http://game.url/1"
     assert storage.get_game_state(url) is None

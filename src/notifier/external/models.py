@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class KeyImage(BaseModel):
@@ -40,6 +40,12 @@ class CatalogMapping(BaseModel):
 
 class CatalogNs(BaseModel):
     mappings: list[CatalogMapping] = Field(default_factory=list)
+
+    @field_validator("mappings", mode="before")
+    def _mappings_none_to_list(cls, v):
+        if v is None:
+            return []
+        return v
 
 
 class OfferMapping(BaseModel):
@@ -128,6 +134,12 @@ class EpicGameData(BaseModel):
     offer_mappings: list[OfferMapping] = Field(default_factory=list, alias="offerMappings")
     price: Price
     promotions: Promotions
+
+    @field_validator("offer_mappings", mode="before")
+    def _offer_mappings_none_to_list(cls, v):
+        if v is None:
+            return []
+        return v
 
     class Config:
         populate_by_name = True
