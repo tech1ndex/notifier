@@ -39,7 +39,7 @@ class CatalogMapping(BaseModel):
 
 
 class CatalogNs(BaseModel):
-    mappings: list[CatalogMapping]
+    mappings: list[CatalogMapping] = Field(default_factory=list)
 
 
 class OfferMapping(BaseModel):
@@ -125,7 +125,7 @@ class EpicGameData(BaseModel):
     categories: list[Category]
     tags: list[Tag]
     catalog_ns: CatalogNs = Field(alias="catalogNs")
-    offer_mappings: list[OfferMapping] = Field(alias="offerMappings")
+    offer_mappings: list[OfferMapping] = Field(default_factory=list, alias="offerMappings")
     price: Price
     promotions: Promotions
 
