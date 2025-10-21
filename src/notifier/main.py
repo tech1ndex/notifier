@@ -2,6 +2,7 @@ import concurrent.futures
 import sys
 import time
 
+import requests
 import tenacity
 
 from notifier.bot.signal import SignalBot
@@ -11,19 +12,46 @@ from notifier.settings import EpicSettings, SignalBotSettings
 from notifier.storage import SentGamesStorage
 
 
-@tenacity.retry(
-    stop=tenacity.stop_after_attempt(5),
-    wait=tenacity.wait_exponential(multiplier=2, min=2, max=30),
-    retry=tenacity.retry_if_result(lambda result: result is None),
-    reraise=True,
-)
-def send_with_retry(bot, group_id, message):
-    return bot.send_group_message(group_id=group_id, message=message)
+def send_with_retry(bot, group_id, message, timeout: float | None = None, max_attempts: int = 5):
+    attempt = 0
+    wait = 2.0
+    deadline = time.time() + timeout if timeout is not None else None
+    while True:
+        try:
+            result = bot.send_group_message(group_id=group_id, message=message)
+            if result is None:
+                attempt += 1
+                if attempt >= max_attempts:
+                    raise tenacity.RetryError(f"Exceeded {max_attempts} attempts")
+                if deadline is not None:
+                    time_left = deadline - time.time()
+                    if time_left <= 0:
+                        raise TimeoutError("send_with_retry timed out")
+                    sleep = min(wait, time_left)
+                else:
+                    sleep = wait
+                time.sleep(sleep)
+                wait = min(wait * 2, 30)
+                continue
+            return result
+        except requests.exceptions.RequestException:
+            attempt += 1
+            if attempt >= max_attempts:
+                raise tenacity.RetryError(f"Exceeded {max_attempts} attempts")
+            if deadline is not None:
+                time_left = deadline - time.time()
+                if time_left <= 0:
+                    raise TimeoutError("send_with_retry timed out")
+                sleep = min(wait, time_left)
+            else:
+                sleep = wait
+            time.sleep(sleep)
+            wait = min(wait * 2, 30)
 
 
 def send_with_timeout(bot, group_id, message, timeout: int) -> bool:
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(send_with_retry, bot, group_id, message)
+        future = executor.submit(send_with_retry, bot, group_id, message, timeout)
         try:
             return future.result(timeout=timeout)
         except concurrent.futures.TimeoutError:
@@ -61,7 +89,7 @@ def main():
                     else:
                         storage.mark_game_failed(game.game_url)
                         logger.error(f"Timeout sending message for {game.game_url}")
-                except (ConnectionError, TimeoutError) as e:
+                except (requests.exceptions.RequestException, ConnectionError, TimeoutError) as e:
                     storage.mark_game_failed(game.game_url)
                     logger.error(f"Failed to send message after retries: {e}")
 
