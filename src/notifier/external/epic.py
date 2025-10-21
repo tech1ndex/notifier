@@ -13,13 +13,52 @@ class EpicFreeGames:
     def client(self) -> EpicGamesStoreAPI:
         return EpicGamesStoreAPI(country=self.settings.country)
 
+    @staticmethod
+    def _normalize_game_dict(game: dict) -> dict:
+        g = dict(game)
+
+        list_keys = [
+            "keyImages",
+            "items",
+            "customAttributes",
+            "categories",
+            "tags",
+            "offerMappings",
+        ]
+        for k in list_keys:
+            if g.get(k) is None:
+                g[k] = []
+
+        if g.get("catalogNs") is None:
+            g["catalogNs"] = {"mappings": []}
+        elif g["catalogNs"].get("mappings") is None:
+            g["catalogNs"]["mappings"] = []
+
+        if g.get("price") is not None and g["price"].get("lineOffers") is None:
+            g["price"]["lineOffers"] = []
+
+        if g.get("promotions") is not None:
+            if g["promotions"].get("promotionalOffers") is None:
+                g["promotions"]["promotionalOffers"] = []
+            if g["promotions"].get("upcomingPromotionalOffers") is None:
+                g["promotions"]["upcomingPromotionalOffers"] = []
+
+            for group in g["promotions"].get("promotionalOffers", []):
+                if group.get("promotionalOffers") is None:
+                    group["promotionalOffers"] = []
+
+        return g
+
     def get_free_games(self) -> list[EpicGameData]:
         api = self.client()
         free_games_data = api.get_free_games()["data"]["Catalog"]["searchStore"][
             "elements"
         ]
+
         validated_games = [
-            EpicGameData(**game) for game in free_games_data if game.get("promotions")
+            EpicGameData(**self._normalize_game_dict(game))
+            for game in free_games_data
+            if game.get("promotions")
         ]
 
         return sorted(validated_games, key=lambda g: g.title)

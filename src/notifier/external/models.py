@@ -126,7 +126,8 @@ class EpicGameData(BaseModel):
     tags: list[Tag]
     catalog_ns: CatalogNs = Field(alias="catalogNs")
     offer_mappings: list[OfferMapping] = Field(
-        default_factory=list, alias="offerMappings",
+        default_factory=list,
+        alias="offerMappings",
     )
     price: Price
     promotions: Promotions

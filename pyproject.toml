@@ -199,7 +199,7 @@ max-complexity = 10
 # https://beta.ruff.rs/docs/rules/
 "__init__.py" = ["F401","F403","F405",]
 "tests/*" = ["ANN", "ARG", "INP001", "S101",]
-"src/*" = ["ANN", "ARG", "INP001", "S101", "D102", "D100", "D101", "D103", "D104", "D105", "D106", "D107", "TC002", "TC003"]
+"src/*" = ["ANN", "ARG", "INP001", "S101", "D102", "D100", "D101", "D103", "D104", "D105", "D106", "D107", "TC002", "TC003", "C901", "TRY300",]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

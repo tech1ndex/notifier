@@ -1,6 +1,5 @@
 import pytest
 import pytest_mock
-from tenacity import RetryError
 
 from notifier.bot.signal import SignalBot
 from notifier.main import send_with_retry
@@ -33,6 +32,7 @@ def test_retry_exceeds_max_attempts(mocker: pytest_mock.MockerFixture) -> None:
         new=mocker.MagicMock(),
     )
     mock_send.side_effect = [None] * 5
-    with pytest.raises(RetryError):
+    with pytest.raises(SystemExit) as exc:
         send_with_retry(bot, group_id, message)
+    assert exc.value.code == 1
     assert mock_send.call_count == mock_send_call_count
