@@ -4,14 +4,13 @@ import concurrent.futures
 import sys
 import time
 
-import requests
-import tenacity
-
 from notifier.bot.signal import SignalBot
 from notifier.external.epic import EpicFreeGames
 from notifier.logger.setup import setup_logger
 from notifier.settings import EpicSettings, SignalBotSettings
 from notifier.storage import SentGamesStorage
+
+logger = setup_logger()
 
 
 def send_with_retry(
@@ -25,25 +24,12 @@ def send_with_retry(
     wait = 2.0
     deadline = time.time() + timeout if timeout is not None else None
     while True:
-        try:
-            result = bot.send_group_message(group_id=group_id, message=message)
-            if result is None:
-                attempt += 1
-                if attempt >= max_attempts:
-                    raise tenacity.RetryError
-                if deadline is not None:
-                    time_left = deadline - time.time()
-                    if time_left <= 0:
-                        raise TimeoutError
-                    sleep = min(wait, time_left)
-                else:
-                    sleep = wait
-                time.sleep(sleep)
-                wait = min(wait * 2, 30)
-                continue
-            return result
-        except requests.exceptions.RequestException:
+        result = bot.send_group_message(group_id=group_id, message=message)
+        if result is None:
             attempt += 1
+            if attempt >= max_attempts:
+                logger.info("Max attempts to Signal API reached, exiting")
+                sys.exit(1)
             if deadline is not None:
                 time_left = deadline - time.time()
                 sleep = min(wait, time_left)
@@ -51,6 +37,8 @@ def send_with_retry(
                 sleep = wait
             time.sleep(sleep)
             wait = min(wait * 2, 30)
+            continue
+        return result
 
 
 def send_with_timeout(bot, group_id, message, timeout: int) -> bool:
@@ -63,7 +51,6 @@ def send_with_timeout(bot, group_id, message, timeout: int) -> bool:
 
 
 def main():
-    logger = setup_logger()
     signal_settings = SignalBotSettings()
     bot = SignalBot(signal_settings.signal_api_url, signal_settings.signal_phone)
     storage = SentGamesStorage()
@@ -94,7 +81,6 @@ def main():
                         storage.mark_game_failed(game.game_url)
                         logger.error(f"Timeout sending message for {game.game_url}")
                 except (
-                    requests.exceptions.RequestException,
                     ConnectionError,
                     TimeoutError,
                 ) as e:
