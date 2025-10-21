@@ -16,12 +16,14 @@ class SentGamesStorage:
 
         # When running under pytest, use an isolated temp file to avoid interference
         if os.environ.get("PYTEST_CURRENT_TEST"):
-            self.file_path = str(Path(tempfile.gettempdir()) / f".notifier_sent_games_test_{os.getpid()}.json")
+            self.file_path = str(
+                Path(tempfile.gettempdir())
+                / f".notifier_sent_games_test_{os.getpid()}.json",
+            )
+        elif default_path == "sent_games.json":
+            self.file_path = str(Path.home() / ".notifier_sent_games.json")
         else:
-            if default_path == "sent_games.json":
-                self.file_path = str(Path.home() / ".notifier_sent_games.json")
-            else:
-                self.file_path = default_path
+            self.file_path = default_path
 
         self._states: dict[str, str] = self._load_states()
 

@@ -31,13 +31,11 @@ class EpicFreeGames:
 
         if g.get("catalogNs") is None:
             g["catalogNs"] = {"mappings": []}
-        else:
-            if g["catalogNs"].get("mappings") is None:
-                g["catalogNs"]["mappings"] = []
+        elif g["catalogNs"].get("mappings") is None:
+            g["catalogNs"]["mappings"] = []
 
-        if g.get("price") is not None:
-            if g["price"].get("lineOffers") is None:
-                g["price"]["lineOffers"] = []
+        if g.get("price") is not None and g["price"].get("lineOffers") is None:
+            g["price"]["lineOffers"] = []
 
         if g.get("promotions") is not None:
             if g["promotions"].get("promotionalOffers") is None:

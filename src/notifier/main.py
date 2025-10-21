@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import concurrent.futures
 import sys
 import time
@@ -12,7 +14,13 @@ from notifier.settings import EpicSettings, SignalBotSettings
 from notifier.storage import SentGamesStorage
 
 
-def send_with_retry(bot, group_id, message, timeout: float | None = None, max_attempts: int = 5):
+def send_with_retry(
+    bot,
+    group_id,
+    message,
+    timeout: float | None = None,
+    max_attempts: int = 5,
+):
     attempt = 0
     wait = 2.0
     deadline = time.time() + timeout if timeout is not None else None
@@ -22,11 +30,11 @@ def send_with_retry(bot, group_id, message, timeout: float | None = None, max_at
             if result is None:
                 attempt += 1
                 if attempt >= max_attempts:
-                    raise tenacity.RetryError(f"Exceeded {max_attempts} attempts")
+                    raise tenacity.RetryError
                 if deadline is not None:
                     time_left = deadline - time.time()
                     if time_left <= 0:
-                        raise TimeoutError("send_with_retry timed out")
+                        raise TimeoutError
                     sleep = min(wait, time_left)
                 else:
                     sleep = wait
@@ -36,12 +44,8 @@ def send_with_retry(bot, group_id, message, timeout: float | None = None, max_at
             return result
         except requests.exceptions.RequestException:
             attempt += 1
-            if attempt >= max_attempts:
-                raise tenacity.RetryError(f"Exceeded {max_attempts} attempts")
             if deadline is not None:
                 time_left = deadline - time.time()
-                if time_left <= 0:
-                    raise TimeoutError("send_with_retry timed out")
                 sleep = min(wait, time_left)
             else:
                 sleep = wait
@@ -89,7 +93,11 @@ def main():
                     else:
                         storage.mark_game_failed(game.game_url)
                         logger.error(f"Timeout sending message for {game.game_url}")
-                except (requests.exceptions.RequestException, ConnectionError, TimeoutError) as e:
+                except (
+                    requests.exceptions.RequestException,
+                    ConnectionError,
+                    TimeoutError,
+                ) as e:
                     storage.mark_game_failed(game.game_url)
                     logger.error(f"Failed to send message after retries: {e}")
 
