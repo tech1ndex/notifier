@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-import concurrent.futures
+import os
 import sys
+import tempfile
 import time
+from pathlib import Path
+
+from requests.exceptions import HTTPError, ConnectionError, Timeout
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from notifier.bot.signal import SignalBot
 from notifier.external.epic import EpicFreeGames
@@ -13,51 +18,41 @@ from notifier.storage import SentGamesStorage
 logger = setup_logger()
 
 
-def send_with_retry(
-    bot,
-    group_id,
-    message,
-    timeout: float | None = None,
-    max_attempts: int = 5,
-):
-    attempt = 0
-    wait = 2.0
-    deadline = time.time() + timeout if timeout is not None else None
-    while True:
-        result = bot.send_group_message(group_id=group_id, message=message)
-        if result is None:
-            attempt += 1
-            if attempt >= max_attempts:
-                logger.info("Max attempts to Signal API reached, exiting")
-                sys.exit(1)
-            if deadline is not None:
-                time_left = deadline - time.time()
-                sleep = min(wait, time_left)
-            else:
-                sleep = wait
-            time.sleep(sleep)
-            wait = min(wait * 2, 30)
-            continue
-        return result
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=2, min=2, max=30),
+    retry=retry_if_exception_type((HTTPError, ConnectionError, Timeout)),
+    reraise=True,
+)
+def send_message(bot: SignalBot, group_id: str, message: str) -> dict | None:
+    return bot.send_group_message(group_id=group_id, message=message)
 
 
-def send_with_timeout(bot, group_id, message, timeout: int) -> bool:
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(send_with_retry, bot, group_id, message, timeout)
-        try:
-            return future.result(timeout=timeout)
-        except concurrent.futures.TimeoutError:
-            return False
+def get_storage_path(settings: EpicSettings) -> str:
+    default_path = settings.sent_games_file_path
+
+    # When running under pytest, use an isolated temp file to avoid interference
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return str(
+            Path(tempfile.gettempdir())
+            / f".notifier_sent_games_test_{os.getpid()}.json",
+        )
+    if default_path == "sent_games.json":
+        return str(Path.home() / ".notifier_sent_games.json")
+    return default_path
 
 
 def main():
     signal_settings = SignalBotSettings()
     bot = SignalBot(signal_settings.signal_api_url, signal_settings.signal_phone)
-    storage = SentGamesStorage()
+    
+    epic_settings = EpicSettings()
+    storage_path = get_storage_path(epic_settings)
+    storage = SentGamesStorage(storage_path)
+    
     logger.info(f"Bot initialized for {signal_settings.signal_phone}")
 
     group_id = signal_settings.signal_group_id
-    epic_settings = EpicSettings()
     epic = EpicFreeGames(epic_settings)
 
     try:
@@ -69,23 +64,11 @@ def main():
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                 storage.mark_game_pending(game.game_url)
                 try:
-                    sent = send_with_timeout(
-                        bot,
-                        group_id,
-                        message,
-                        signal_settings.send_timeout_seconds,
-                    )
-                    if sent:
-                        storage.mark_game_sent(game.game_url)
-                    else:
-                        storage.mark_game_failed(game.game_url)
-                        logger.error(f"Timeout sending message for {game.game_url}")
-                except (
-                    ConnectionError,
-                    TimeoutError,
-                ) as e:
+                    send_message(bot, group_id, message)
+                    storage.mark_game_sent(game.game_url)
+                except Exception as e:
                     storage.mark_game_failed(game.game_url)
-                    logger.error(f"Failed to send message after retries: {e}")
+                    logger.error(f"Failed to send message for {game.game_url}: {e}")
 
             if signal_settings.one_time_run:
                 logger.info("One-time run completed. Exiting.")
