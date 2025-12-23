@@ -30,12 +30,9 @@ class SignalBot:
             timeout=10,
         )
 
-        success_code = 201
-        if response.status_code == success_code:
-            logger.info(
-                f"Message sent successfully at {datetime.now(tz=timezone.utc)}",
-            )
-            return response.json()
-        logger.error("Failed to send message. Status code: {}", response.status_code)
-        logger.error("Response: {}", response.text)
-        return None
+        response.raise_for_status()
+
+        logger.info(
+            f"Message sent successfully at {datetime.now(tz=timezone.utc)}",
+        )
+        return response.json()

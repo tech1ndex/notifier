@@ -15,10 +15,15 @@ A simple Python project to fetch a list of free Games on the Epic Games Store an
 
 ###### Signal:
 ```bash
-docker run -d -t -i -e SIGNAL_PHONE='+16731274926' \
--e SIGNAL_GROUP_ID="group" \
+docker run -d \
+--name notifier \
+--restart unless-stopped \
+-v "$(pwd)/notifier:/notifier" \
+-e SIGNAL_PHONE='+16731274926' \
+-e SIGNAL_GROUP_ID="groupID" \
 -e SIGNAL_API_URL="http://localhost:8080" \
 -e SENT_GAMES_FILE_PATH="/tmp/sent_games.json"
+notifier:<version>
 ```
 
 If you want to use the Signal bot, you need to set the following environment variables:

@@ -1,29 +1,12 @@
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from pathlib import Path
-
-from notifier.settings import EpicSettings
 
 
 class SentGamesStorage:
-    def __init__(self):
-        settings = EpicSettings()
-        self.settings = settings
-        default_path = settings.sent_games_file_path
-
-        # When running under pytest, use an isolated temp file to avoid interference
-        if os.environ.get("PYTEST_CURRENT_TEST"):
-            self.file_path = str(
-                Path(tempfile.gettempdir())
-                / f".notifier_sent_games_test_{os.getpid()}.json",
-            )
-        elif default_path == "sent_games.json":
-            self.file_path = str(Path.home() / ".notifier_sent_games.json")
-        else:
-            self.file_path = default_path
+    def __init__(self, file_path: str):
+        self.file_path = file_path
 
         self._states: dict[str, str] = self._load_states()
 
