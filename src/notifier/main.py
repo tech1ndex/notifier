@@ -6,8 +6,13 @@ import tempfile
 import time
 from pathlib import Path
 
-from requests.exceptions import HTTPError, ConnectionError, Timeout
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from requests.exceptions import RequestException
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from notifier.bot.signal import SignalBot
 from notifier.external.epic import EpicFreeGames
@@ -20,8 +25,8 @@ logger = setup_logger()
 
 @retry(
     stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=2, min=2, max=30),
-    retry=retry_if_exception_type((HTTPError, ConnectionError, Timeout)),
+    wait=wait_exponential(multiplier=1, min=1, max=15),
+    retry=retry_if_exception_type(RequestException),
     reraise=True,
 )
 def send_message(bot: SignalBot, group_id: str, message: str) -> dict | None:
@@ -45,11 +50,11 @@ def get_storage_path(settings: EpicSettings) -> str:
 def main():
     signal_settings = SignalBotSettings()
     bot = SignalBot(signal_settings.signal_api_url, signal_settings.signal_phone)
-    
+
     epic_settings = EpicSettings()
     storage_path = get_storage_path(epic_settings)
     storage = SentGamesStorage(storage_path)
-    
+
     logger.info(f"Bot initialized for {signal_settings.signal_phone}")
 
     group_id = signal_settings.signal_group_id
