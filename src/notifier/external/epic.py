@@ -75,6 +75,30 @@ class EpicFreeGames:
             return game.catalog_ns.mappings[0].page_slug
         return game.url_slug
 
+    @staticmethod
+    def is_game_bundle(slug: str, game_data=None) -> bool:
+        slug_lower = slug.lower()
+        slug_parts = set(slug_lower.replace("-", " ").replace("_", " ").split())
+
+        bundle_keywords = {
+            "collection",
+            "bundle",
+            "pack",
+            "anthology",
+        }
+
+        if bundle_keywords & slug_parts:
+            return True
+
+        if "complete-edition" in slug_lower:
+            return True
+
+        return bool(
+            game_data
+            and hasattr(game_data, "offer_type")
+            and game_data.offer_type == "BUNDLE"
+        )
+
     def format_free_games(self) -> list[FormattedGame]:
         free_games = self.get_free_games()
         games_info = []
@@ -85,13 +109,23 @@ class EpicFreeGames:
                 and game.price.total_price.discount_price == 0
             ):
                 promotion = game.promotions.promotional_offers[0].promotional_offers[0]
+                game_slug = self.get_game_slug(game)
+
+                path_prefix = (
+                    "bundles" if self.is_game_bundle(game_slug, game) else None
+                )
+                game_url = (
+                    f"{self.settings.base_url}/{path_prefix}/{game_slug}"
+                    if path_prefix
+                    else f"{self.settings.base_url}/{game_slug}"
+                )
 
                 games_info.append(
                     FormattedGame(
                         game_title=game.title,
                         game_price=game.price.total_price.fmt_price.original_price,
                         end_date=promotion.end_date,
-                        game_url=f"{self.settings.base_url}/{self.get_game_slug(game)}",
+                        game_url=game_url,
                     ),
                 )
 
