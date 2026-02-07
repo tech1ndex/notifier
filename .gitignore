@@ -129,3 +129,6 @@ dmypy.json
 # AI
 .ai/
 ai/instructions.md
+
+#Games
+sent_games.json
