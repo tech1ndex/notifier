@@ -1,4 +1,7 @@
+from typing import ClassVar
+
 import pytest
+
 from notifier.external.epic import EpicFreeGames
 
 
@@ -88,10 +91,10 @@ class TestFormatFreeGamesIntegration:
             end_date = "2024-01-15T00:00:00.000Z"
 
         class MockPromotionalOffers:
-            promotional_offers = [MockPromotion()]
+            promotional_offers: ClassVar = [MockPromotion()]
 
         class MockPromotions:
-            promotional_offers = [MockPromotionalOffers()]
+            promotional_offers: ClassVar = [MockPromotionalOffers()]
 
         class MockPrice:
             class TotalPrice:
