@@ -42,13 +42,16 @@ def test_send_group_message_failure(mocker):
     mock_response = Mock()
     mock_response.status_code = 500
     mock_response.text = "Internal Server Error"
+    mock_response.raise_for_status.side_effect = requests.HTTPError(
+        response=mock_response,
+    )
 
     mock_post = mocker.patch("requests.post", return_value=mock_response)
 
-    result = bot.send_group_message("test-group-id", "Test message")
+    with pytest.raises(requests.HTTPError):
+        bot.send_group_message("test-group-id", "Test message")
 
     assert mock_post.call_count == 1
-    assert result is None
 
 
 def test_send_group_message_with_timeout_parameter(mocker):

@@ -64,11 +64,16 @@ def main():
         while True:
             for game in epic.format_free_games():
                 state = storage.get_game_state(game.game_url)
-                if state in {"sent", "pending"}:
+                if state == "sent":
                     continue
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                 storage.mark_game_pending(game.game_url)
-                send_message(bot, group_id, message)
+                try:
+                    send_message(bot, group_id, message)
+                except RequestException:
+                    logger.error(f"Failed to send message for {game.game_url} after retries")
+                    storage.mark_game_failed(game.game_url)
+                    continue
                 storage.mark_game_sent(game.game_url)
 
             if signal_settings.one_time_run:

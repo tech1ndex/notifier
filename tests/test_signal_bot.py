@@ -2,6 +2,7 @@ import json
 
 import pytest
 import pytest_mock
+import requests
 from requests.exceptions import Timeout
 
 from notifier.bot.signal import SignalBot
@@ -38,9 +39,12 @@ def test_send_group_message_http_error(mocker: pytest_mock.MockerFixture) -> Non
     mock_post = mocker.patch("requests.post")
     mock_post.return_value.status_code = 400
     mock_post.return_value.text = "Bad Request"
+    mock_post.return_value.raise_for_status.side_effect = requests.HTTPError(
+        response=mock_post.return_value,
+    )
 
-    result = bot.send_group_message("group1", "hello")
-    assert result is None
+    with pytest.raises(requests.HTTPError):
+        bot.send_group_message("group1", "hello")
 
 
 def test_send_group_message_timeout(mocker: pytest_mock.MockerFixture) -> None:
