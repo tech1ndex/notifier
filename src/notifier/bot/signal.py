@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timezone
+from http import HTTPStatus
 
 import requests
 from loguru import logger
@@ -30,7 +31,11 @@ class SignalBot:
             timeout=10,
         )
 
-        response.raise_for_status()
+        if response.status_code >= HTTPStatus.BAD_REQUEST:
+            logger.error(
+                f"Failed to send message: {response.status_code} {response.text}",
+            )
+            response.raise_for_status()
 
         logger.info(
             f"Message sent successfully at {datetime.now(tz=timezone.utc)}",
