@@ -71,7 +71,9 @@ def main():
                 try:
                     send_message(bot, group_id, message)
                 except RequestException:
-                    logger.error(f"Failed to send message for {game.game_url} after retries")
+                    logger.error(
+                        f"Failed to send message for {game.game_url} after retries"
+                    )
                     storage.mark_game_failed(game.game_url)
                     continue
                 storage.mark_game_sent(game.game_url)
