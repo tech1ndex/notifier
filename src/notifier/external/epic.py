@@ -96,7 +96,7 @@ class EpicFreeGames:
         return bool(
             game_data
             and hasattr(game_data, "offer_type")
-            and game_data.offer_type == "BUNDLE"
+            and game_data.offer_type == "BUNDLE",
         )
 
     def format_free_games(self) -> list[FormattedGame]:

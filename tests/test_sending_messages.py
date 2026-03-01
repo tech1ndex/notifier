@@ -1,6 +1,7 @@
 import pytest
 import pytest_mock
-from requests.exceptions import HTTPError, ConnectionError, Timeout
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import HTTPError, Timeout
 
 from notifier.bot.signal import SignalBot
 from notifier.main import send_message
@@ -42,7 +43,7 @@ def test_retry_on_connection_error(mocker: pytest_mock.MockerFixture) -> None:
     )
     # Raise ConnectionError, then Timeout, then succeed
     mock_send.side_effect = [
-        ConnectionError("Fail"),
+        RequestsConnectionError("Fail"),
         Timeout("Fail"),
         {"status": "success"},
     ]

@@ -68,12 +68,8 @@ def main():
                     continue
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                 storage.mark_game_pending(game.game_url)
-                try:
-                    send_message(bot, group_id, message)
-                    storage.mark_game_sent(game.game_url)
-                except Exception as e:
-                    storage.mark_game_failed(game.game_url)
-                    logger.error(f"Failed to send message for {game.game_url}: {e}")
+                send_message(bot, group_id, message)
+                storage.mark_game_sent(game.game_url)
 
             if signal_settings.one_time_run:
                 logger.info("One-time run completed. Exiting.")
