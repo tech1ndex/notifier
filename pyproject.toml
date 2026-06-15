@@ -87,7 +87,7 @@ optional = true
 notifier = "notifier.main:main"
 
 [tool.poetry.group.tests.dependencies]
-pytest = "^9.0.2"
+pytest = "^9.1.0"
 pytest-cov = "^7.1.0"
 tox = "^4.50.3"
 tox-gh-actions = "^3.2.0"
