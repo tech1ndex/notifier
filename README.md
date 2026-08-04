@@ -22,7 +22,7 @@ docker run -d \
 -e SIGNAL_PHONE='+16731274926' \
 -e SIGNAL_GROUP_ID="groupID" \
 -e SIGNAL_API_URL="http://localhost:8080" \
--e SENT_GAMES_FILE_PATH="/tmp/sent_games.json"
+-e SENT_GAMES_FILE_PATH="/notifier/sent_games.json"
 notifier:<version>
 ```
 

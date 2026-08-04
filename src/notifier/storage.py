@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 
 
@@ -23,7 +25,16 @@ class SentGamesStorage:
 
     def save_states(self) -> None:
         p = Path(self.file_path)
-        p.write_text(json.dumps(self._states))
+        p.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=str(p.parent), suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w") as f:
+                json.dump(self._states, f)
+                f.flush()
+                os.fsync(f.fileno())
+            Path(tmp).replace(p)
+        finally:
+            Path(tmp).unlink(missing_ok=True)
 
     def get_game_state(self, url: str) -> str | None:
         return self._states.get(url)
