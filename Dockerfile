@@ -35,4 +35,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ /app/src/
 
+ENV SENT_GAMES_FILE_PATH=/notifier/sent_games.json
+VOLUME ["/notifier"]
+
 CMD ["python", "src/notifier/main.py"]

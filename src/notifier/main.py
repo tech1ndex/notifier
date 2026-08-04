@@ -64,7 +64,7 @@ def main():
         while True:
             for game in epic.format_free_games():
                 state = storage.get_game_state(game.game_url)
-                if state == "sent":
+                if state in ("sent", "pending"):
                     continue
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
                 storage.mark_game_pending(game.game_url)
