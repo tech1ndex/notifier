@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class EpicSettings(BaseSettings):
     country: str = "CA"
     sent_games_file_path: str = "sent_games.json"
-    base_url: str = "https://store.epicgames.com/en-US/p"
+    base_url: str = "https://store.epicgames.com/en-US"
 
 
 class SignalBotSettings(BaseSettings):

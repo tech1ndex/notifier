@@ -66,38 +66,17 @@ class EpicFreeGames:
     @staticmethod
     def get_game_slug(game: EpicGameData) -> str:
         if game.product_slug:
-            return game.product_slug
-        if (
+            slug = game.product_slug
+        elif (
             game.catalog_ns
             and game.catalog_ns.mappings
             and len(game.catalog_ns.mappings) > 0
         ):
-            return game.catalog_ns.mappings[0].page_slug
-        return game.url_slug
+            slug = game.catalog_ns.mappings[0].page_slug
+        else:
+            slug = game.url_slug
 
-    @staticmethod
-    def is_game_bundle(slug: str, game_data=None) -> bool:
-        slug_lower = slug.lower()
-        slug_parts = set(slug_lower.replace("-", " ").replace("_", " ").split())
-
-        bundle_keywords = {
-            "collection",
-            "bundle",
-            "pack",
-            "anthology",
-        }
-
-        if bundle_keywords & slug_parts:
-            return True
-
-        if "complete-edition" in slug_lower:
-            return True
-
-        return bool(
-            game_data
-            and hasattr(game_data, "offer_type")
-            and game_data.offer_type == "BUNDLE",
-        )
+        return slug.strip("/").split("/")[0] if slug else slug
 
     def format_free_games(self) -> list[FormattedGame]:
         free_games = self.get_free_games()
@@ -110,15 +89,8 @@ class EpicFreeGames:
             ):
                 promotion = game.promotions.promotional_offers[0].promotional_offers[0]
                 game_slug = self.get_game_slug(game)
-
-                path_prefix = (
-                    "bundles" if self.is_game_bundle(game_slug, game) else None
-                )
-                game_url = (
-                    f"{self.settings.base_url}/{path_prefix}/{game_slug}"
-                    if path_prefix
-                    else f"{self.settings.base_url}/{game_slug}"
-                )
+                path_segment = "bundles" if game.offer_type == "BUNDLE" else "p"
+                game_url = f"{self.settings.base_url}/{path_segment}/{game_slug}"
 
                 games_info.append(
                     FormattedGame(
