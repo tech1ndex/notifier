@@ -22,7 +22,7 @@ class Item(BaseModel):
 
 class CustomAttribute(BaseModel):
     key: str
-    value: str
+    value: str | None = None
 
 
 class Category(BaseModel):
@@ -121,7 +121,10 @@ class EpicGameData(BaseModel):
     url_slug: str = Field(alias="urlSlug")
     url: str | None = None
     items: list[Item]
-    custom_attributes: list[CustomAttribute] = Field(alias="customAttributes")
+    custom_attributes: list[CustomAttribute] = Field(
+        default_factory=list,
+        alias="customAttributes",
+    )
     categories: list[Category]
     tags: list[Tag]
     catalog_ns: CatalogNs = Field(alias="catalogNs")
