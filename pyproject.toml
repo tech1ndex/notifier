@@ -18,7 +18,7 @@ exclude_lines = [
 
 [tool.poetry]
 name = "notifier"
-version = "0.23.3"
+version = "1.0.0"
 description = "Notifies a Signal Group when new Free Games are available on Epic Games Store."
 package-mode = false
 packages = [
