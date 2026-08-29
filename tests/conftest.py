@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 import pytest
+from loguru import logger
 
 from notifier.api.epic import EpicFreeGames
 from notifier.settings import EpicSettings
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterator
 
 RAW_GAME = {
     "title": "Cardpocalypse",
@@ -88,6 +89,22 @@ def free_games_payload(elements: list[dict]) -> dict:
 @pytest.fixture
 def raw_game() -> dict:
     return copy.deepcopy(RAW_GAME)
+
+
+@pytest.fixture
+def captured_logs() -> Iterator[list[dict]]:
+    records: list[dict] = []
+    sink_id = logger.add(
+        lambda message: records.append(
+            {
+                "level": message.record["level"].name,
+                "message": message.record["message"],
+            },
+        ),
+        level="DEBUG",
+    )
+    yield records
+    logger.remove(sink_id)
 
 
 @pytest.fixture
