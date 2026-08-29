@@ -14,6 +14,9 @@ on:
 
 permissions:
   contents: write
+  # Needed by the docker job below: a called workflow cannot request more
+  # permissions than its caller grants.
+  packages: write
 
 jobs:
   release:
