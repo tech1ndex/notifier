@@ -1,0 +1,132 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump to apply"
+        required: true
+        default: patch
+        type: choice
+        options: [patch, minor, major]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.user.login != 'dependabot[bot]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine version bump
+        id: bump
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          DISPATCH_BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "bump=${DISPATCH_BUMP}" >> "${GITHUB_OUTPUT}"
+            echo "Bump from manual dispatch: ${DISPATCH_BUMP}"
+            exit 0
+          fi
+
+          # feat! / fix(scope)! / a BREAKING CHANGE footer all mean major.
+          if [[ "${PR_TITLE}" =~ ^[a-z]+(\([a-z0-9._/-]+\))?!: ]] \
+            || [[ "${PR_BODY}" == *"BREAKING CHANGE"* ]]; then
+            BUMP=major
+          elif [[ "${PR_TITLE}" =~ ^feat(\([a-z0-9._/-]+\))?: ]]; then
+            BUMP=minor
+          else
+            BUMP=patch
+          fi
+
+          echo "bump=${BUMP}" >> "${GITHUB_OUTPUT}"
+          echo "Bump from title '${PR_TITLE}': ${BUMP}"
+
+      - name: Compute next version
+        id: version
+        env:
+          BUMP: ${{ steps.bump.outputs.bump }}
+        run: |
+          set -euo pipefail
+
+          # Release tags are bare semver; ignore the legacy dev-* tags.
+          LATEST=$(git tag --list --sort=-v:refname \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | head -n1 || true)
+          LATEST=${LATEST:-0.0.0}
+
+          IFS=. read -r MAJOR MINOR PATCH <<< "${LATEST}"
+
+          case "${BUMP}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEXT="${MAJOR}.${MINOR}.${PATCH}"
+
+          if git rev-parse -q --verify "refs/tags/${NEXT}" >/dev/null; then
+            echo "::error title=Tag exists::${NEXT} already exists"
+            exit 1
+          fi
+
+          {
+            echo "previous=${LATEST}"
+            echo "next=${NEXT}"
+          } >> "${GITHUB_OUTPUT}"
+
+          echo "${LATEST} --(${BUMP})--> ${NEXT}"
+
+      - name: Sync pyproject.toml version
+        env:
+          NEXT: ${{ steps.version.outputs.next }}
+        run: |
+          set -euo pipefail
+
+          # Only the [tool.poetry] version, not any dependency pin.
+          sed -i -E "0,/^version = \".*\"$/s//version = \"${NEXT}\"/" pyproject.toml
+          grep -q "^version = \"${NEXT}\"$" pyproject.toml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "chore(release): ${NEXT}"
+          git tag "${NEXT}"
+          git push origin main
+          git push origin "${NEXT}"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT: ${{ steps.version.outputs.next }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: |
+          set -euo pipefail
+
+          NOTES_ARGS=()
+          if git rev-parse -q --verify "refs/tags/${PREVIOUS}" >/dev/null; then
+            NOTES_ARGS+=(--notes-start-tag "${PREVIOUS}")
+          fi
+
+          gh release create "${NEXT}" \
+            --title "${NEXT}" \
+            --target main \
+            --generate-notes \
+            "${NOTES_ARGS[@]}"
