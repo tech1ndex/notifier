@@ -17,8 +17,6 @@ permissions:
 
 jobs:
   release:
-    # Merged PRs only, and never for dependabot's own PRs - those ride along in
-    # the notes of the next human release.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true &&
