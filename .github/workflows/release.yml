@@ -22,6 +22,8 @@ jobs:
       (github.event.pull_request.merged == true &&
        github.event.pull_request.user.login != 'dependabot[bot]')
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.next }}
 
     steps:
       - uses: actions/checkout@v7
@@ -46,18 +48,26 @@ jobs:
             exit 0
           fi
 
-          # feat! / fix(scope)! / a BREAKING CHANGE footer all mean major.
-          if [[ "${PR_TITLE}" =~ ^[a-z]+(\([a-z0-9._/-]+\))?!: ]] \
-            || [[ "${PR_BODY}" == *"BREAKING CHANGE"* ]]; then
+          # feat! / fix(scope)! / a BREAKING CHANGE footer all mean major. The
+          # footer must start a line and be followed by a colon, per the
+          # Conventional Commits spec - a prose mention of the phrase in the PR
+          # description must not trigger a major bump.
+          if [[ "${PR_TITLE}" =~ ^[a-z]+(\([a-z0-9._/-]+\))?!: ]]; then
             BUMP=major
+            REASON="'!' marker in title"
+          elif grep -qE '^BREAKING[ -]CHANGE:' <<< "${PR_BODY}"; then
+            BUMP=major
+            REASON="BREAKING CHANGE footer in body"
           elif [[ "${PR_TITLE}" =~ ^feat(\([a-z0-9._/-]+\))?: ]]; then
             BUMP=minor
+            REASON="feat type"
           else
             BUMP=patch
+            REASON="default"
           fi
 
           echo "bump=${BUMP}" >> "${GITHUB_OUTPUT}"
-          echo "Bump from title '${PR_TITLE}': ${BUMP}"
+          echo "Bump from title '${PR_TITLE}': ${BUMP} (${REASON})"
 
       - name: Compute next version
         id: version
@@ -130,3 +140,10 @@ jobs:
             --target main \
             --generate-notes \
             "${NOTES_ARGS[@]}"
+
+  docker:
+    needs: release
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      tag: ${{ needs.release.outputs.version }}
+    secrets: inherit
