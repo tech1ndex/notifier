@@ -202,6 +202,51 @@ def test_unrecognised_url_pattern_falls_back_to_offer_type(
     assert f"{epic.settings.base_url}/bundles/cardpocalypse" == games[0].game_url
 
 
+def test_missing_cms_page_does_not_warn(
+    epic_client: Callable[..., EpicFreeGames],
+    captured_logs: list[dict],
+) -> None:
+    # The majority of live games have no CMS page, so the fallback is routine
+    # and must not warn - otherwise every normal run looks broken.
+    epic = epic_client(
+        elements=[make_raw_game(productSlug="monument-valley-1d99d3")],
+        cms={},
+    )
+
+    epic.format_free_games()
+
+    levels = {record["level"] for record in captured_logs}
+    assert "WARNING" not in levels
+    assert any("offerType fallback" in r["message"] for r in captured_logs)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected_fragment"),
+    [
+        ({"cms_status": 500}, "returned 500"),
+        (
+            {"cms": {"cardpocalypse": {"products": "/store-page-v9/cardpocalypse"}}},
+            "Unrecognised _urlPattern",
+        ),
+    ],
+)
+def test_unexpected_cms_conditions_warn(
+    kwargs: dict,
+    expected_fragment: str,
+    epic_client: Callable[..., EpicFreeGames],
+    captured_logs: list[dict],
+) -> None:
+    epic = epic_client(
+        elements=[make_raw_game(productSlug="cardpocalypse")],
+        **kwargs,
+    )
+
+    epic.format_free_games()
+
+    warnings = [r["message"] for r in captured_logs if r["level"] == "WARNING"]
+    assert any(expected_fragment in message for message in warnings)
+
+
 def test_store_content_url_setting_is_used() -> None:
     requested = []
 

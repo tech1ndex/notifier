@@ -111,6 +111,12 @@ client, and made store URLs authoritative rather than inferred.
 ### Fixed
 
 - Bundle URLs no longer 404 (follow-up to the `offerType`-only fix).
+- A missing CMS page logs at DEBUG rather than WARNING. Most live games (5 of 8
+  at time of writing - every one whose slug carries Epic's `-<hex>` suffix) have
+  no page in the legacy CMS, so taking the `offerType` fallback is the normal
+  path, not an anomaly. WARNING is now reserved for cases that need attention: a
+  non-404 CMS status, an unreadable body, a transport failure, or an
+  `_urlPattern` whose route we do not recognise.
 
 ### Removed
 

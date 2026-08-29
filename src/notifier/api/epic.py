@@ -272,7 +272,7 @@ class EpicFreeGames:
                 logger.warning(f"Unrecognised _urlPattern {url_pattern!r} for {slug!r}")
             return store_path
 
-        logger.warning(f"No CMS page found for {slug!r}")
+        logger.debug(f"No CMS page for {slug!r}; using the offerType fallback")
         return None
 
     @staticmethod
