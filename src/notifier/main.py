@@ -14,8 +14,8 @@ from tenacity import (
     wait_exponential,
 )
 
+from notifier.api.epic import EpicFreeGames
 from notifier.bot.signal import SignalBot
-from notifier.external.epic import EpicFreeGames
 from notifier.logger.setup import setup_logger
 from notifier.settings import EpicSettings, SignalBotSettings
 from notifier.storage import SentGamesStorage
