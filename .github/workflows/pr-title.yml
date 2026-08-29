@@ -1,0 +1,47 @@
+name: PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title is a Conventional Commit
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+
+          TYPES='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          PATTERN="^(${TYPES})(\([a-z0-9._/-]+\))?!?: .+"
+
+          if [[ ! "${PR_TITLE}" =~ ${PATTERN} ]]; then
+            {
+              echo "### Invalid PR title"
+              echo
+              echo "\`${PR_TITLE}\`"
+              echo
+              echo "Titles must follow Conventional Commits, because the release"
+              echo "workflow derives the version bump from the title:"
+              echo
+              echo '| Title | Bump |'
+              echo '| --- | --- |'
+              echo '| `fix: broken bundle URLs` | patch |'
+              echo '| `chore(deps): bump ruff` | patch |'
+              echo '| `feat: migrate off epicstore` | minor |'
+              echo '| `feat!: drop python 3.11` | major |'
+              echo
+              echo "Allowed types: \`${TYPES//|/\`, \`}\`."
+              echo "Add \`!\` before the colon for a breaking change."
+            } >> "${GITHUB_STEP_SUMMARY}"
+
+            echo "::error title=Invalid PR title::${PR_TITLE}"
+            exit 1
+          fi
+
+          echo "PR title OK: ${PR_TITLE}"
