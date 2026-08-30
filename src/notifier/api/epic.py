@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any
 
@@ -14,7 +15,7 @@ from tenacity import (
 )
 
 from notifier.api.errors import EpicApiError, EpicNotFoundError
-from notifier.api.models import EpicGameData, FormattedGame
+from notifier.api.models import EpicGameData, FormattedGame, PromotionalOffer
 from notifier.settings import EpicSettings
 
 CONTENT_TYPES = ("products", "bundles")
@@ -27,6 +28,8 @@ CMS_ROUTE_TO_STORE_PATH = {
 }
 
 SPURIOUS_ERROR_CODE = 1004
+
+FREE_DISCOUNT_PERCENTAGE = 0
 
 
 def parse_service_response(error: dict) -> Any:
@@ -293,6 +296,38 @@ class EpicFreeGames:
             and game.price.total_price.discount_price == 0,
         )
 
+    @staticmethod
+    def all_promotional_offers(game: EpicGameData) -> list[PromotionalOffer]:
+        return [
+            offer
+            for group in game.promotions.promotional_offers
+            for offer in group.promotional_offers
+        ]
+
+    @staticmethod
+    def is_giveaway(offer: PromotionalOffer) -> bool:
+        # Epic reports the percentage of the original price still payable, so a
+        # free game is 0 and a half-price sale is 50.
+        return offer.discount_setting.discount_percentage == FREE_DISCOUNT_PERCENTAGE
+
+    def current_promotion(self, game: EpicGameData) -> PromotionalOffer | None:
+        offers = self.all_promotional_offers(game)
+        if not offers:
+            return None
+
+        now = datetime.now(tz=timezone.utc)
+        active = [o for o in offers if o.start_date <= now <= o.end_date]
+        giveaways = [o for o in active if self.is_giveaway(o)]
+
+        # Prefer the offer that is both live and free, so the end date we publish
+        # is the one that actually governs the giveaway rather than whichever
+        # offer Epic happened to list first.
+        for candidates in (giveaways, active, offers):
+            if candidates:
+                return min(candidates, key=lambda o: o.end_date)
+
+        return None
+
     def format_free_games(self) -> list[FormattedGame]:
         free_games = self.get_free_games()
         games_info = []
@@ -302,7 +337,14 @@ class EpicFreeGames:
                 if not self.is_free_now(game):
                     continue
 
-                promotion = game.promotions.promotional_offers[0].promotional_offers[0]
+
+                promotion = self.current_promotion(game)
+                if promotion is None:
+                    logger.warning(
+                        f"{game.title!r} is free but has no promotional offer; skipping",
+                    )
+                    continue
+
                 games_info.append(
                     FormattedGame(
                         game_title=game.title,

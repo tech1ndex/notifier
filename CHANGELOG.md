@@ -1,75 +1,6 @@
-
-# WIMIP Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [CHANGELOG.md][CHANGELOG.md]
-and this project adheres to [Semantic Versioning][Semantic Versioning].
-
-<!-- 
-TEMPLATE
-
-## [major.minor.patch] - yyyy-mm-dd
-
-A message that notes the main changes in the update.
-
-### Added
-
-### Changed
-
-### Deprecated
-
-### Fixed
-
-### Removed
-
-### Security
-
-_______________________________________________________________________________
- 
- -->
-
-<!--
-EXAMPLE
-
-## [0.2.0] - 2021-06-02
-
-Lorem Ipsum dolor sit amet.
-
-### Added
-
-- Cat pictures hidden in the library
-- Added beeswax to the gears
-
-### Changed
-
-- Updated localisation files
-
--->
-
-<!--
 _______________________________________________________________________________
 
-## [0.1.1] - YYYY-MM-DD
-
-In-progress update goes here.
-
-### Added
-
-- Stuff
-
-### Changed
-
-- Updated localisation files
-
--->
-
-_______________________________________________________________________________
-
-## [Unreleased]
-
-Replaced the `epicstore_api` library with a small in-house Epic Games Store API
-client, and made store URLs authoritative rather than inferred.
+## [v1 Major Changes]
 
 ### Added
 
@@ -111,6 +42,13 @@ client, and made store URLs authoritative rather than inferred.
 ### Fixed
 
 - Bundle URLs no longer 404 (follow-up to the `offerType`-only fix).
+- The published end date is taken from the promotional offer that is actually
+  live and free, instead of `promotionalOffers[0].promotionalOffers[0]`. Epic
+  models these as a list of lists and does not guarantee ordering, so the first
+  entry could be an expired or upcoming window, or a concurrent partial discount
+  - any of which would put a wrong "free until" date in the notification. A group
+  with an empty inner list also raised `IndexError` and killed the whole run;
+  such a game is now skipped with a warning.
 - A missing CMS page logs at DEBUG rather than WARNING. Most live games (5 of 8
   at time of writing - every one whose slug carries Epic's `-<hex>` suffix) have
   no page in the legacy CMS, so taking the `offerType` fallback is the normal
