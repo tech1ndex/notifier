@@ -306,8 +306,6 @@ class EpicFreeGames:
 
     @staticmethod
     def is_giveaway(offer: PromotionalOffer) -> bool:
-        # Epic reports the percentage of the original price still payable, so a
-        # free game is 0 and a half-price sale is 50.
         return offer.discount_setting.discount_percentage == FREE_DISCOUNT_PERCENTAGE
 
     def current_promotion(self, game: EpicGameData) -> PromotionalOffer | None:
@@ -315,13 +313,9 @@ class EpicFreeGames:
         if not offers:
             return None
 
-        now = datetime.now(tz=timezone.utc)
-        active = [o for o in offers if o.start_date <= now <= o.end_date]
+        active = [o for o in offers if o.start_date <= datetime.now(tz=timezone.utc) <= o.end_date]
         giveaways = [o for o in active if self.is_giveaway(o)]
 
-        # Prefer the offer that is both live and free, so the end date we publish
-        # is the one that actually governs the giveaway rather than whichever
-        # offer Epic happened to list first.
         for candidates in (giveaways, active, offers):
             if candidates:
                 return min(candidates, key=lambda o: o.end_date)
