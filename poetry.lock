@@ -718,14 +718,14 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "poetry-core"
-version = "2.4.1"
+version = "2.5.0"
 description = "Poetry PEP 517 Build Backend"
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "poetry_core-2.4.1-py3-none-any.whl", hash = "sha256:acf06f9537cd2625bdaec926d95d90b557ba15353bc71d27a3a8a441042b5316"},
-    {file = "poetry_core-2.4.1.tar.gz", hash = "sha256:89dceb6c10e9c6d8650a16183400e3c9ff9ddee13b0a81023b5575334a2b3744"},
+    {file = "poetry_core-2.5.0-py3-none-any.whl", hash = "sha256:98ee465b66f7e14bb9fbe68fb5e00d0cff184f036993ec94610ae4b5612f3add"},
+    {file = "poetry_core-2.5.0.tar.gz", hash = "sha256:81d04c9253b19d0604718268d781867c8f7b2128e5b25bbf1e84141eec6b89c4"},
 ]
 
 [[package]]
@@ -1284,4 +1284,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "ca1c0aea016144f89c444a8ae7f62882b3d7596e083b7a9f4b873cf107521674"
+content-hash = "6a7a127c0a9639be63ca5c6dca9442e316664dfa25022cab155dd1d8a1b7a3ee"
