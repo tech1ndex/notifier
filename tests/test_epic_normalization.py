@@ -87,7 +87,7 @@ def epic(monkeypatch):
             def get_free_games():
                 return {"data": {"Catalog": {"searchStore": {"elements": elements}}}}
 
-        monkeypatch.setattr(instance, "client", lambda: FakeApi())
+        monkeypatch.setattr(instance, "client", FakeApi)
         return instance
 
     return _epic
