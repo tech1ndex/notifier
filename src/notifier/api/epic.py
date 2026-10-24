@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -9,7 +10,7 @@ import httpx
 from loguru import logger
 from tenacity import (
     Retrying,
-    retry_if_exception_type,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
 )
@@ -30,6 +31,20 @@ CMS_ROUTE_TO_STORE_PATH = {
 SPURIOUS_ERROR_CODE = 1004
 
 FREE_DISCOUNT_PERCENTAGE = 0
+
+
+def is_transport_error(exc: BaseException) -> bool:
+    return isinstance(exc, httpx.TransportError)
+
+
+def is_retryable_error(exc: BaseException) -> bool:
+    if isinstance(exc, httpx.HTTPStatusError):
+        status = exc.response.status_code
+        return (
+            status == HTTPStatus.TOO_MANY_REQUESTS
+            or status >= HTTPStatus.INTERNAL_SERVER_ERROR
+        )
+    return isinstance(exc, httpx.TransportError)
 
 
 def parse_service_response(error: dict) -> Any:
@@ -104,6 +119,7 @@ class EpicFreeGames:
     ) -> None:
         self.settings = settings
         self._transport = transport
+        self._store_path_cache: dict[str, str | None] = {}
 
     def client(self) -> httpx.Client:
         return httpx.Client(
@@ -112,7 +128,7 @@ class EpicFreeGames:
             follow_redirects=True,
         )
 
-    def retrying(self, exception_types: type[Exception]) -> Retrying:
+    def retrying(self, should_retry: Callable[[BaseException], bool]) -> Retrying:
         return Retrying(
             stop=stop_after_attempt(self.settings.retry_attempts),
             wait=wait_exponential(
@@ -120,7 +136,7 @@ class EpicFreeGames:
                 min=self.settings.retry_wait_min_seconds,
                 max=self.settings.retry_wait_max_seconds,
             ),
-            retry=retry_if_exception_type(exception_types),
+            retry=retry_if_exception(should_retry),
             reraise=True,
         )
 
@@ -140,10 +156,15 @@ class EpicFreeGames:
         url: str,
         params: dict | None = None,
     ) -> Any:
-        return self.retrying(httpx.HTTPError)(self.fetch_json, client, url, params)
+        return self.retrying(is_retryable_error)(
+            self.fetch_json,
+            client,
+            url,
+            params,
+        )
 
     def get_response(self, client: httpx.Client, url: str) -> httpx.Response:
-        return self.retrying(httpx.TransportError)(client.get, url)
+        return self.retrying(is_transport_error)(client.get, url)
 
     @staticmethod
     def _normalize_game_dict(game: dict) -> dict:
@@ -246,12 +267,9 @@ class EpicFreeGames:
     ) -> str | None:
         response = self.get_response(client, self.content_url(content_type, slug))
 
-        if response.status_code >= HTTPStatus.BAD_REQUEST:
-            if response.status_code != HTTPStatus.NOT_FOUND:
-                logger.warning(
-                    f"CMS lookup for {slug!r} returned {response.status_code}",
-                )
+        if response.status_code == HTTPStatus.NOT_FOUND:
             return None
+        response.raise_for_status()
 
         try:
             return response.json().get("_urlPattern")
@@ -260,12 +278,17 @@ class EpicFreeGames:
             return None
 
     def resolve_store_path(self, client: httpx.Client, slug: str) -> str | None:
+        # Cached for the process lifetime: avoids re-querying the CMS every cycle
+        # and keeps a game's URL (the dedup key) stable. Errors are never cached.
+        if slug not in self._store_path_cache:
+            self._store_path_cache[slug] = self.lookup_store_path(client, slug)
+        return self._store_path_cache[slug]
+
+    def lookup_store_path(self, client: httpx.Client, slug: str) -> str | None:
         for content_type in CONTENT_TYPES:
-            try:
-                url_pattern = self.fetch_url_pattern(client, content_type, slug)
-            except httpx.HTTPError as exc:
-                logger.warning(f"CMS lookup failed for {slug!r}: {exc}")
-                return None
+            # Transient CMS failures propagate: guessing a path here would change
+            # the game URL, which is the dedup key, and re-announce the game.
+            url_pattern = self.fetch_url_pattern(client, content_type, slug)
 
             if url_pattern is None:
                 continue
@@ -313,10 +336,12 @@ class EpicFreeGames:
         if not offers:
             return None
 
-        active = [o for o in offers if o.start_date <= datetime.now(tz=timezone.utc) <= o.end_date]
+        now = datetime.now(tz=UTC)
+        active = [o for o in offers if o.start_date <= now <= o.end_date]
         giveaways = [o for o in active if self.is_giveaway(o)]
+        upcoming_end = [o for o in offers if o.end_date >= now]
 
-        for candidates in (giveaways, active, offers):
+        for candidates in (giveaways, active, upcoming_end):
             if candidates:
                 return min(candidates, key=lambda o: o.end_date)
 
@@ -331,11 +356,23 @@ class EpicFreeGames:
                 if not self.is_free_now(game):
                     continue
 
-
                 promotion = self.current_promotion(game)
                 if promotion is None:
                     logger.warning(
                         f"{game.title!r} is free but has no promotional offer; skipping",
+                    )
+                    continue
+
+                if not self.get_game_slug(game):
+                    logger.warning(f"{game.title!r} has no store slug; skipping")
+                    continue
+
+                try:
+                    game_url = self.game_url(client, game)
+                except httpx.HTTPError as exc:
+                    logger.warning(
+                        f"CMS lookup failed for {game.title!r}; "
+                        f"skipping until next run: {exc}",
                     )
                     continue
 
@@ -344,7 +381,7 @@ class EpicFreeGames:
                         game_title=game.title,
                         game_price=game.price.total_price.fmt_price.original_price,
                         end_date=promotion.end_date,
-                        game_url=self.game_url(client, game),
+                        game_url=game_url,
                     ),
                 )
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -12,6 +13,8 @@ from notifier.settings import EpicSettings
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+
+_NOW = datetime.now(tz=UTC)
 
 RAW_GAME = {
     "title": "Cardpocalypse",
@@ -61,8 +64,8 @@ RAW_GAME = {
             {
                 "promotionalOffers": [
                     {
-                        "startDate": "2026-08-20T15:00:00.000Z",
-                        "endDate": "2026-08-27T15:00:00.000Z",
+                        "startDate": (_NOW - timedelta(days=1)).isoformat(),
+                        "endDate": (_NOW + timedelta(days=6)).isoformat(),
                         "discountSetting": {
                             "discountType": "PERCENTAGE",
                             "discountPercentage": 0,

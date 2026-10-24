@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-
 def test_null_custom_attribute_value_is_accepted(
     epic_client: Callable[..., EpicFreeGames],
     raw_game: dict,

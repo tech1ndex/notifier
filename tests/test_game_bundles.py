@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     import pytest_mock
 
 
-
 class CatalogMappingStub:
     def __init__(self, page_slug: str) -> None:
         self.page_slug = page_slug
@@ -151,7 +150,7 @@ def test_missing_cms_page_falls_back_to_offer_type(
     assert expected == games[0].game_url
 
 
-def test_cms_host_error_falls_back_to_offer_type(
+def test_cms_host_error_skips_game(
     epic_client: Callable[..., EpicFreeGames],
 ) -> None:
     epic = epic_client(
@@ -165,12 +164,11 @@ def test_cms_host_error_falls_back_to_offer_type(
         cms_status=500,
     )
 
-    games = epic.format_free_games()
+    # A guessed URL would change the dedup key, so the game waits for the next run.
+    assert epic.format_free_games() == []
 
-    assert f"{epic.settings.base_url}/bundles/some-bundle" == games[0].game_url
 
-
-def test_cms_unreachable_falls_back_to_offer_type(
+def test_cms_unreachable_skips_game(
     epic_client: Callable[..., EpicFreeGames],
     mocker: pytest_mock.MockerFixture,
 ) -> None:
@@ -183,10 +181,8 @@ def test_cms_unreachable_falls_back_to_offer_type(
         side_effect=httpx.ConnectError("content host down"),
     )
 
-    games = epic.format_free_games()
-
+    assert epic.format_free_games() == []
     mock_get.assert_called_once()
-    assert f"{epic.settings.base_url}/p/cardpocalypse" == games[0].game_url
 
 
 def test_unrecognised_url_pattern_falls_back_to_offer_type(
@@ -223,7 +219,7 @@ def test_missing_cms_page_does_not_warn(
 @pytest.mark.parametrize(
     ("kwargs", "expected_fragment"),
     [
-        ({"cms_status": 500}, "returned 500"),
+        ({"cms_status": 500}, "CMS lookup failed"),
         (
             {"cms": {"cardpocalypse": {"products": "/store-page-v9/cardpocalypse"}}},
             "Unrecognised _urlPattern",

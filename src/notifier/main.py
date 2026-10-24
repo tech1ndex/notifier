@@ -6,6 +6,7 @@ import tempfile
 import time
 from pathlib import Path
 
+import httpx
 from requests.exceptions import RequestException
 from tenacity import (
     retry,
@@ -15,6 +16,7 @@ from tenacity import (
 )
 
 from notifier.api.epic import EpicFreeGames
+from notifier.api.errors import EpicApiError
 from notifier.bot.signal import SignalBot
 from notifier.logger.setup import setup_logger
 from notifier.settings import EpicSettings, SignalBotSettings
@@ -62,7 +64,15 @@ def main():
 
     try:
         while True:
-            for game in epic.format_free_games():
+            try:
+                games = epic.format_free_games()
+            except (httpx.HTTPError, EpicApiError) as exc:
+                logger.error(f"Failed to fetch free games: {exc}")
+                if signal_settings.one_time_run:
+                    sys.exit(1)
+                games = []
+
+            for game in games:
                 state = storage.get_game_state(game.game_url)
                 if state in ("sent", "pending"):
                     continue

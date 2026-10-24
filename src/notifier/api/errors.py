@@ -13,7 +13,7 @@ class EpicApiError(Exception):
         super().__init__(message)
         self.message = (
             f"Error code: {error_code if error_code is not None else 'unknown'}. "
-            f"{message.capitalize()}"
+            f"{message[:1].upper() + message[1:]}"
         )
         self.error_code = error_code
         self.exception_data = service_response
