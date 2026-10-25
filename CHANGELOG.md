@@ -5,8 +5,12 @@ _______________________________________________________________________________
 ### Added
 
 - `notifier.api` package holding our own Epic client (`epic.py`), error types
-  (`errors.py`) and the response models moved from `notifier.external`.
+  (`errors.py`) and validated response models (`models.py`).
 - `httpx` dependency, used for all Epic calls.
+- Response-level error handling for errors served with an HTTP 200. Intermittent
+  error code 1004 is ignored when accompanied by a valid payload. Missing
+  `serviceResponse` or an `errorCode` ending in `not_found` is fatal; other
+  response errors are logged and tolerated.
 - Canonical URL resolution against Epic's CMS
   (`store-content.ak.epicgames.com/api/{locale}/content/{products,bundles}/<slug>`).
   Each CMS page publishes its own `_urlPattern`, which is the source of truth for
@@ -26,7 +30,7 @@ _______________________________________________________________________________
   `store-site-backend-static.ak.epicgames.com/freeGamesPromotions` (with `locale`,
   `country` and `allowCountries`). This endpoint is plain JSON, not GraphQL, and
   needs no anti-bot handling — only `store.epicgames.com` is bot-protected, and we
-  never call it. That made the library's `cloudscraper` session dead weight.
+  never call it.
 - Store URLs are resolved from the CMS first, falling back to the previous
   `offerType == "BUNDLE"` heuristic when a lookup fails, 404s on both content
   types, or returns a route we do not recognise. The feed's `pageType` is
@@ -55,17 +59,6 @@ _______________________________________________________________________________
   path, not an anomaly. WARNING is now reserved for cases that need attention: a
   non-404 CMS status, an unreadable body, a transport failure, or an
   `_urlPattern` whose route we do not recognise.
-
-### Removed
-
-- `epicstore_api` and `cloudscraper` dependencies. Two behaviours were ported out
-  of the library before dropping it: `_clean_1004_errors`, because
-  `freeGamesPromotions` intermittently returns error code 1004 alongside a
-  perfectly valid payload and Epic's own launcher ignores it, and `_get_errors`,
-  the response-level error check for errors served with an HTTP 200. As in the
-  library, only recognised errors (missing `serviceResponse`, or an `errorCode`
-  ending in `not_found`) are fatal; anything else is logged and tolerated so a
-  stray error never costs us a notification.
 
 _______________________________________________________________________________
 
