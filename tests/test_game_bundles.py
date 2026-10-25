@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import httpx
 import pytest
-from conftest import make_raw_game
+from conftest import free_games_payload, make_raw_game
 
 from notifier.api.epic import EpicFreeGames, store_path_from_url_pattern
 from notifier.settings import EpicSettings
@@ -183,6 +183,56 @@ def test_cms_unreachable_skips_game(
 
     assert epic.format_free_games() == []
     mock_get.assert_called_once()
+
+
+@pytest.mark.parametrize("content_type", ["products", "bundles"])
+@pytest.mark.parametrize(
+    "cms_body",
+    [
+        "<html>temporarily unavailable</html>",
+        "[]",
+        "null",
+        "{}",
+        '{"_urlPattern": null}',
+        '{"_urlPattern": ""}',
+        '{"_urlPattern": "   "}',
+        '{"_urlPattern": 123}',
+        '{"_urlPattern": ["/bundles/some-bundle"]}',
+    ],
+)
+def test_malformed_cms_response_skips_game_and_recovers_next_poll(
+    content_type: str,
+    cms_body: str,
+) -> None:
+    healthy = False
+    cms_requests: list[str] = []
+    elements = [make_raw_game(productSlug="some-bundle", offerType="BASE_GAME")]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.startswith("/freeGamesPromotions"):
+            return httpx.Response(200, json=free_games_payload(elements))
+
+        cms_requests.append(request.url.path)
+        if not healthy and f"/content/{content_type}/" in request.url.path:
+            return httpx.Response(200, text=cms_body)
+        if "/content/products/" in request.url.path:
+            return httpx.Response(404)
+        return httpx.Response(200, json={"_urlPattern": "/bundles/some-bundle"})
+
+    epic = EpicFreeGames(EpicSettings(), transport=httpx.MockTransport(handler))
+
+    # A malformed response must not produce or cache the incorrect /p/ fallback.
+    assert epic.format_free_games() == []
+
+    healthy = True
+    games = epic.format_free_games()
+    expected = f"{epic.settings.base_url}/bundles/some-bundle"
+    assert [game.game_url for game in games] == [expected]
+
+    # Successful resolution is still cached on subsequent polls.
+    cms_requests.clear()
+    assert [game.game_url for game in epic.format_free_games()] == [expected]
+    assert cms_requests == []
 
 
 def test_unrecognised_url_pattern_falls_back_to_offer_type(

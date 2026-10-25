@@ -272,10 +272,16 @@ class EpicFreeGames:
         response.raise_for_status()
 
         try:
-            return response.json().get("_urlPattern")
-        except (ValueError, AttributeError):
-            logger.warning(f"CMS returned an unreadable body for {slug!r}")
-            return None
+            payload = response.json()
+        except ValueError as exc:
+            msg = f"CMS returned an unreadable body for {slug!r}"
+            raise EpicApiError(msg) from exc
+
+        url_pattern = payload.get("_urlPattern") if isinstance(payload, dict) else None
+        if not isinstance(url_pattern, str) or not url_pattern.strip():
+            msg = f"CMS returned an invalid _urlPattern for {slug!r}"
+            raise EpicApiError(msg)
+        return url_pattern
 
     def resolve_store_path(self, client: httpx.Client, slug: str) -> str | None:
         # Cached for the process lifetime: avoids re-querying the CMS every cycle
@@ -369,7 +375,7 @@ class EpicFreeGames:
 
                 try:
                     game_url = self.game_url(client, game)
-                except httpx.HTTPError as exc:
+                except (httpx.HTTPError, EpicApiError) as exc:
                     logger.warning(
                         f"CMS lookup failed for {game.title!r}; "
                         f"skipping until next run: {exc}",
