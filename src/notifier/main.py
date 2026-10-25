@@ -89,6 +89,9 @@ def main():
                 storage.mark_game_sent(game.game_url)
 
             if signal_settings.one_time_run:
+                if epic.had_cms_errors:
+                    logger.error("One-time run incomplete: some CMS lookups failed.")
+                    sys.exit(1)
                 logger.info("One-time run completed. Exiting.")
                 sys.exit(0)
 

@@ -97,6 +97,7 @@ def test_pending_game_not_resent_after_restart(
 
     mocker.patch.object(main_module, "SignalBot", autospec=True)
     fake_epic = mocker.patch.object(main_module, "EpicFreeGames", autospec=True)
+    fake_epic.return_value.had_cms_errors = False
     fake_epic.return_value.format_free_games.return_value = [
         SimpleNamespace(
             game_url=pending_url,
@@ -108,9 +109,10 @@ def test_pending_game_not_resent_after_restart(
 
     mock_send = mocker.patch.object(main_module, "send_message")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         main_module.main()
 
+    assert exc_info.value.code == 0
     assert mock_send.call_count == 1
     sent_message = mock_send.call_args.args[2]
     assert new_url in sent_message

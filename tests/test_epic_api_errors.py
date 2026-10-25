@@ -132,6 +132,19 @@ def test_unexpected_payload_shape_raises(
         epic_client(payload={"data": {"Catalog": None}}).get_free_games()
 
 
+@pytest.mark.parametrize("body", ["<html>temporarily unavailable</html>", "", '{"data":'])
+def test_malformed_feed_raises_api_error(body: str) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=body)
+
+    epic = EpicFreeGames(EpicSettings(), transport=httpx.MockTransport(handler))
+
+    with pytest.raises(EpicApiError, match="unreadable body") as exc_info:
+        epic.get_free_games()
+
+    assert isinstance(exc_info.value.__cause__, ValueError)
+
+
 def test_games_without_promotions_are_skipped(
     epic_client: Callable[..., EpicFreeGames],
 ) -> None:

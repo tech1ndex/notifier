@@ -120,6 +120,7 @@ class EpicFreeGames:
         self.settings = settings
         self._transport = transport
         self._store_path_cache: dict[str, str | None] = {}
+        self.had_cms_errors = False
 
     def client(self) -> httpx.Client:
         return httpx.Client(
@@ -148,7 +149,11 @@ class EpicFreeGames:
     ) -> Any:
         response = client.get(url, params=params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except ValueError as exc:
+            msg = "freeGamesPromotions returned an unreadable body"
+            raise EpicApiError(msg) from exc
 
     def get_json(
         self,
@@ -354,6 +359,8 @@ class EpicFreeGames:
         return None
 
     def format_free_games(self) -> list[FormattedGame]:
+        # Report partial failures to callers while returning successfully resolved games.
+        self.had_cms_errors = False
         free_games = self.get_free_games()
         games_info = []
 
@@ -376,6 +383,7 @@ class EpicFreeGames:
                 try:
                     game_url = self.game_url(client, game)
                 except (httpx.HTTPError, EpicApiError) as exc:
+                    self.had_cms_errors = True
                     logger.warning(
                         f"CMS lookup failed for {game.title!r}; "
                         f"skipping until next run: {exc}",
