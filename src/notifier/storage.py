@@ -49,7 +49,11 @@ class SentGamesStorage:
 
         legacy_states = {self._states.get(key) for key in legacy_keys}
         state = next(
-            (state for state in ("sent", "pending", "failed") if state in legacy_states),
+            (
+                state
+                for state in ("sent", "pending", "failed")
+                if state in legacy_states
+            ),
             None,
         )
         if state is not None:

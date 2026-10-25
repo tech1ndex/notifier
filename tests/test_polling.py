@@ -77,13 +77,17 @@ def test_malformed_feed_recovers_next_poll(
         "SignalBotSettings",
         return_value=SignalBotSettings(one_time_run=False),
     )
-    mocker.patch.object(main_module.time, "sleep", side_effect=[None, KeyboardInterrupt])
+    mocker.patch.object(
+        main_module.time, "sleep", side_effect=[None, KeyboardInterrupt],
+    )
 
     main_module.main()
 
     assert feed_requests == expected_polls
     isolated_main.assert_called_once()
-    assert f"{epic.settings.base_url}/p/cardpocalypse" in isolated_main.call_args.args[2]
+    assert (
+        f"{epic.settings.base_url}/p/cardpocalypse" in isolated_main.call_args.args[2]
+    )
 
 
 @pytest.mark.parametrize("failure", ["http", "transport", "malformed"])
@@ -96,10 +100,14 @@ def test_one_time_cms_failure_reports_failure_and_recovers(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     healthy = False
-    elements = [make_raw_game(id="failed-id", title="A Failed", productSlug="failed-game")]
+    elements = [
+        make_raw_game(id="failed-id", title="A Failed", productSlug="failed-game"),
+    ]
     if include_healthy_game:
         elements.append(
-            make_raw_game(id="healthy-id", title="B Healthy", productSlug="healthy-game"),
+            make_raw_game(
+                id="healthy-id", title="B Healthy", productSlug="healthy-game",
+            ),
         )
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -139,7 +147,10 @@ def test_one_time_cms_failure_reports_failure_and_recovers(
     assert exc_info.value.code == 0
     isolated_main.assert_called_once()
     assert failed_url in isolated_main.call_args.args[2]
-    assert SentGamesStorage(storage.file_path).get_game_state("cardpocalypse-ns:failed-id") == "sent"
+    assert (
+        SentGamesStorage(storage.file_path).get_game_state("cardpocalypse-ns:failed-id")
+        == "sent"
+    )
 
 
 @pytest.mark.parametrize("include_game", [False, True])
@@ -196,7 +207,10 @@ def test_offer_not_resent_after_restart_with_changed_url(
     game_key = "cardpocalypse-ns:abc123"
     assert SentGamesStorage(storage_path).get_game_state(game_key) == state
     assert isolated_main.call_args.args[2].endswith("/p/cardpocalypse")
-    assert restarted_epic.format_free_games()[0].game_url != first_epic.format_free_games()[0].game_url
+    assert (
+        restarted_epic.format_free_games()[0].game_url
+        != first_epic.format_free_games()[0].game_url
+    )
 
     isolated_main.reset_mock(side_effect=True)
     with pytest.raises(SystemExit) as exc_info:
@@ -225,11 +239,19 @@ def test_legacy_url_state_migrates_before_sending(
     storage_file = tmp_path / "sent_games.json"
     old_url = f"https://store.epicgames.com/en-US/{old_route}/cardpocalypse"
     unrelated_url = "https://store.epicgames.com/en-US/p/another-game"
-    old_data = [old_url, unrelated_url] if file_format == "list" else {old_url: state, unrelated_url: "sent"}
+    old_data = (
+        [old_url, unrelated_url]
+        if file_format == "list"
+        else {old_url: state, unrelated_url: "sent"}
+    )
     storage_file.write_text(json.dumps(old_data))
 
     # Resolve the opposite route on the first run after upgrading.
-    cms = {"cardpocalypse": {"bundles": "/bundles/cardpocalypse"}} if old_route == "p" else {}
+    cms = (
+        {"cardpocalypse": {"bundles": "/bundles/cardpocalypse"}}
+        if old_route == "p"
+        else {}
+    )
     epic = epic_client(elements=[make_raw_game()], cms=cms)
     mocker.patch.object(main_module, "EpicFreeGames", return_value=epic)
 
@@ -270,8 +292,12 @@ def test_different_offer_using_same_url_is_sent(
     old_url = "https://store.epicgames.com/en-US/p/cardpocalypse"
     storage_file.write_text(json.dumps({old_url: "sent"}))
     first_epic = epic_client(elements=[make_raw_game()])
-    restarted_epic = epic_client(elements=[make_raw_game(id=new_id, namespace=new_namespace)])
-    mocker.patch.object(main_module, "EpicFreeGames", side_effect=[first_epic, restarted_epic])
+    restarted_epic = epic_client(
+        elements=[make_raw_game(id=new_id, namespace=new_namespace)],
+    )
+    mocker.patch.object(
+        main_module, "EpicFreeGames", side_effect=[first_epic, restarted_epic],
+    )
 
     with pytest.raises(SystemExit):
         main_module.main()
@@ -283,7 +309,10 @@ def test_different_offer_using_same_url_is_sent(
     assert exc_info.value.code == 0
     isolated_main.assert_called_once()
     stored = json.loads(storage_file.read_text())
-    assert stored == {"cardpocalypse-ns:abc123": "sent", f"{new_namespace}:{new_id}": "sent"}
+    assert stored == {
+        "cardpocalypse-ns:abc123": "sent",
+        f"{new_namespace}:{new_id}": "sent",
+    }
 
 
 def test_failed_send_is_retried_after_restart_with_changed_route(
@@ -297,7 +326,9 @@ def test_failed_send_is_retried_after_restart_with_changed_route(
         elements=[make_raw_game()],
         cms={"cardpocalypse": {"bundles": "/bundles/cardpocalypse"}},
     )
-    mocker.patch.object(main_module, "EpicFreeGames", side_effect=[first_epic, restarted_epic])
+    mocker.patch.object(
+        main_module, "EpicFreeGames", side_effect=[first_epic, restarted_epic],
+    )
     isolated_main.side_effect = RequestException("Signal unavailable")
 
     with pytest.raises(SystemExit):

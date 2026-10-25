@@ -55,7 +55,11 @@ def test_save_states(tmp_path):
 
 @pytest.mark.parametrize(
     ("product_state", "bundle_state", "expected"),
-    [("failed", "sent", "sent"), ("pending", "failed", "pending"), ("pending", "sent", "sent")],
+    [
+        ("failed", "sent", "sent"),
+        ("pending", "failed", "pending"),
+        ("pending", "sent", "sent"),
+    ],
 )
 def test_migration_preserves_non_retryable_state_across_aliases(
     tmp_path,
@@ -65,18 +69,25 @@ def test_migration_preserves_non_retryable_state_across_aliases(
 ):
     storage_file = tmp_path / "sent_games.json"
     aliases = ("https://store.example/p/game", "https://store.example/bundles/game")
-    storage_file.write_text(json.dumps(dict(zip(aliases, (product_state, bundle_state), strict=True))))
+    storage_file.write_text(
+        json.dumps(dict(zip(aliases, (product_state, bundle_state), strict=True))),
+    )
     storage = SentGamesStorage(str(storage_file))
 
     assert storage.get_or_migrate_game_state("namespace:offer", aliases) == expected
     assert json.loads(storage_file.read_text()) == {"namespace:offer": expected}
-    assert SentGamesStorage(str(storage_file)).get_game_state("namespace:offer") == expected
+    assert (
+        SentGamesStorage(str(storage_file)).get_game_state("namespace:offer")
+        == expected
+    )
 
 
 def test_existing_offer_state_takes_precedence_over_legacy_url(tmp_path):
     storage_file = tmp_path / "sent_games.json"
     legacy_url = "https://store.example/p/game"
-    storage_file.write_text(json.dumps({"namespace:offer": "sent", legacy_url: "failed"}))
+    storage_file.write_text(
+        json.dumps({"namespace:offer": "sent", legacy_url: "failed"}),
+    )
     storage = SentGamesStorage(str(storage_file))
 
     assert storage.get_or_migrate_game_state("namespace:offer", (legacy_url,)) == "sent"

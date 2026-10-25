@@ -132,7 +132,9 @@ def test_unexpected_payload_shape_raises(
         epic_client(payload={"data": {"Catalog": None}}).get_free_games()
 
 
-@pytest.mark.parametrize("body", ["<html>temporarily unavailable</html>", "", '{"data":'])
+@pytest.mark.parametrize(
+    "body", ["<html>temporarily unavailable</html>", "", '{"data":'],
+)
 def test_malformed_feed_raises_api_error(body: str) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, text=body)
