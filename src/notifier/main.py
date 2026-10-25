@@ -73,20 +73,21 @@ def main():
                 games = []
 
             for game in games:
-                state = storage.get_game_state(game.game_url)
+                game_key = game.storage_key
+                state = storage.get_or_migrate_game_state(game_key, game.legacy_urls)
                 if state in ("sent", "pending"):
                     continue
                 message = f"* {game.game_title} {game.game_price} is FREE now --> {game.game_url}"
-                storage.mark_game_pending(game.game_url)
+                storage.mark_game_pending(game_key)
                 try:
                     send_message(bot, group_id, message)
                 except RequestException:
                     logger.error(
                         f"Failed to send message for {game.game_url} after retries",
                     )
-                    storage.mark_game_failed(game.game_url)
+                    storage.mark_game_failed(game_key)
                     continue
-                storage.mark_game_sent(game.game_url)
+                storage.mark_game_sent(game_key)
 
             if signal_settings.one_time_run:
                 if epic.had_cms_errors:

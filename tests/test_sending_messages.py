@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+from datetime import UTC, datetime
 
 import pytest
 import pytest_mock
@@ -6,6 +6,7 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import HTTPError, Timeout
 
 import notifier.main as main_module
+from notifier.api.models import FormattedGame
 from notifier.bot.signal import SignalBot
 from notifier.main import send_message
 from notifier.storage import SentGamesStorage
@@ -99,12 +100,22 @@ def test_pending_game_not_resent_after_restart(
     fake_epic = mocker.patch.object(main_module, "EpicFreeGames", autospec=True)
     fake_epic.return_value.had_cms_errors = False
     fake_epic.return_value.format_free_games.return_value = [
-        SimpleNamespace(
+        FormattedGame(
+            game_id="pending",
+            game_namespace="test",
             game_url=pending_url,
             game_title="Pending Game",
             game_price="$0",
+            end_date=datetime.now(tz=UTC),
         ),
-        SimpleNamespace(game_url=new_url, game_title="New Game", game_price="$0"),
+        FormattedGame(
+            game_id="new",
+            game_namespace="test",
+            game_url=new_url,
+            game_title="New Game",
+            game_price="$0",
+            end_date=datetime.now(tz=UTC),
+        ),
     ]
 
     mock_send = mocker.patch.object(main_module, "send_message")
@@ -118,5 +129,6 @@ def test_pending_game_not_resent_after_restart(
     assert new_url in sent_message
     assert pending_url not in sent_message
     reloaded = SentGamesStorage(str(storage_file))
-    assert reloaded.get_game_state(new_url) == "sent"
-    assert reloaded.get_game_state(pending_url) == "pending"
+    assert reloaded.get_game_state("test:new") == "sent"
+    assert reloaded.get_game_state("test:pending") == "pending"
+    assert reloaded.get_game_state(pending_url) is None

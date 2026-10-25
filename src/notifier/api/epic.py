@@ -289,16 +289,12 @@ class EpicFreeGames:
         return url_pattern
 
     def resolve_store_path(self, client: httpx.Client, slug: str) -> str | None:
-        # Cached for the process lifetime: avoids re-querying the CMS every cycle
-        # and keeps a game's URL (the dedup key) stable. Errors are never cached.
         if slug not in self._store_path_cache:
             self._store_path_cache[slug] = self.lookup_store_path(client, slug)
         return self._store_path_cache[slug]
 
     def lookup_store_path(self, client: httpx.Client, slug: str) -> str | None:
         for content_type in CONTENT_TYPES:
-            # Transient CMS failures propagate: guessing a path here would change
-            # the game URL, which is the dedup key, and re-announce the game.
             url_pattern = self.fetch_url_pattern(client, content_type, slug)
 
             if url_pattern is None:
@@ -392,6 +388,8 @@ class EpicFreeGames:
 
                 games_info.append(
                     FormattedGame(
+                        game_id=game.id,
+                        game_namespace=game.namespace,
                         game_title=game.title,
                         game_price=game.price.total_price.fmt_price.original_price,
                         end_date=promotion.end_date,

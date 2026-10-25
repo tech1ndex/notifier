@@ -164,7 +164,7 @@ def test_cms_host_error_skips_game(
         cms_status=500,
     )
 
-    # A guessed URL would change the dedup key, so the game waits for the next run.
+    # Wait for a reliable URL after a transient CMS failure instead of guessing.
     assert epic.format_free_games() == []
 
 
