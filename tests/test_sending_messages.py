@@ -98,7 +98,6 @@ def test_pending_game_not_resent_after_restart(
 
     mocker.patch.object(main_module, "SignalBot", autospec=True)
     fake_epic = mocker.patch.object(main_module, "EpicFreeGames", autospec=True)
-    fake_epic.return_value.had_cms_errors = False
     fake_epic.return_value.format_free_games.return_value = [
         FormattedGame(
             game_id="pending",

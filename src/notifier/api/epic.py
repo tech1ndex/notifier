@@ -120,7 +120,6 @@ class EpicFreeGames:
         self.settings = settings
         self._transport = transport
         self._store_path_cache: dict[str, str | None] = {}
-        self.had_cms_errors = False
 
     def client(self) -> httpx.Client:
         return httpx.Client(
@@ -313,7 +312,15 @@ class EpicFreeGames:
         return "bundles" if game.offer_type == "BUNDLE" else "p"
 
     def store_path(self, client: httpx.Client, game: EpicGameData, slug: str) -> str:
-        return self.resolve_store_path(client, slug) or self.fallback_store_path(game)
+        try:
+            store_path = self.resolve_store_path(client, slug)
+        except (httpx.HTTPError, EpicApiError) as exc:
+            logger.warning(
+                f"CMS lookup failed for {game.title!r}; "
+                f"using the offerType fallback: {exc}",
+            )
+            return self.fallback_store_path(game)
+        return store_path or self.fallback_store_path(game)
 
     def game_url(self, client: httpx.Client, game: EpicGameData) -> str:
         slug = self.get_game_slug(game)
@@ -355,8 +362,6 @@ class EpicFreeGames:
         return None
 
     def format_free_games(self) -> list[FormattedGame]:
-        # Report partial failures to callers while returning successfully resolved games.
-        self.had_cms_errors = False
         free_games = self.get_free_games()
         games_info = []
 
@@ -376,16 +381,6 @@ class EpicFreeGames:
                     logger.warning(f"{game.title!r} has no store slug; skipping")
                     continue
 
-                try:
-                    game_url = self.game_url(client, game)
-                except (httpx.HTTPError, EpicApiError) as exc:
-                    self.had_cms_errors = True
-                    logger.warning(
-                        f"CMS lookup failed for {game.title!r}; "
-                        f"skipping until next run: {exc}",
-                    )
-                    continue
-
                 games_info.append(
                     FormattedGame(
                         game_id=game.id,
@@ -393,7 +388,7 @@ class EpicFreeGames:
                         game_title=game.title,
                         game_price=game.price.total_price.fmt_price.original_price,
                         end_date=promotion.end_date,
-                        game_url=game_url,
+                        game_url=self.game_url(client, game),
                     ),
                 )
 

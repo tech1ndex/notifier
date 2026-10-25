@@ -42,6 +42,11 @@ The `pending` state is saved before sending. If the process stops after that sav
 the offer stays skipped after restart even if delivery had not completed. Offers
 recorded as `failed` remain eligible for retry.
 
+If Epic's CMS is unavailable or returns an invalid response, notifications use
+the `offerType` fallback URL. Failed lookups are retried on the next poll, and
+recovering a different canonical URL does not resend an already recorded offer.
+One-time runs using fallback URLs still exit successfully.
+
 If you want to use the Signal bot, you need to set the following environment variables:
 - SIGNAL_PHONE: Your phone number
 - SIGNAL_GROUP_ID: The group ID

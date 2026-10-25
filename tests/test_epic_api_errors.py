@@ -133,7 +133,8 @@ def test_unexpected_payload_shape_raises(
 
 
 @pytest.mark.parametrize(
-    "body", ["<html>temporarily unavailable</html>", "", '{"data":'],
+    "body",
+    ["<html>temporarily unavailable</html>", "", '{"data":'],
 )
 def test_malformed_feed_raises_api_error(body: str) -> None:
     def handler(request: httpx.Request) -> httpx.Response:

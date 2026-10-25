@@ -150,7 +150,12 @@ def test_missing_cms_page_falls_back_to_offer_type(
     assert expected == games[0].game_url
 
 
-def test_cms_host_error_skips_game(
+@pytest.mark.parametrize(
+    ("offer_type", "route"), [("BASE_GAME", "p"), ("BUNDLE", "bundles")],
+)
+def test_cms_host_error_uses_offer_type_fallback(
+    offer_type: str,
+    route: str,
     epic_client: Callable[..., EpicFreeGames],
 ) -> None:
     epic = epic_client(
@@ -158,17 +163,19 @@ def test_cms_host_error_skips_game(
             make_raw_game(
                 title="Some Bundle",
                 productSlug="some-bundle",
-                offerType="BUNDLE",
+                offerType=offer_type,
             ),
         ],
         cms_status=500,
     )
 
-    # Wait for a reliable URL after a transient CMS failure instead of guessing.
-    assert epic.format_free_games() == []
+    expected = f"{epic.settings.base_url}/{route}/some-bundle"
+    assert [expected] == [game.game_url for game in epic.format_free_games()]
 
 
-def test_cms_unreachable_skips_game(
+@pytest.mark.parametrize("error", [httpx.ConnectError, httpx.ReadTimeout])
+def test_cms_unreachable_uses_offer_type_fallback(
+    error: type[httpx.TransportError],
     epic_client: Callable[..., EpicFreeGames],
     mocker: pytest_mock.MockerFixture,
 ) -> None:
@@ -178,10 +185,11 @@ def test_cms_unreachable_skips_game(
     )
     mock_get = mocker.patch(
         "notifier.api.epic.EpicFreeGames.get_response",
-        side_effect=httpx.ConnectError("content host down"),
+        side_effect=error("content host down"),
     )
 
-    assert epic.format_free_games() == []
+    expected = f"{epic.settings.base_url}/p/cardpocalypse"
+    assert [expected] == [game.game_url for game in epic.format_free_games()]
     mock_get.assert_called_once()
 
 
@@ -200,7 +208,7 @@ def test_cms_unreachable_skips_game(
         '{"_urlPattern": ["/bundles/some-bundle"]}',
     ],
 )
-def test_malformed_cms_response_skips_game_and_recovers_next_poll(
+def test_malformed_cms_response_uses_fallback_and_recovers_next_poll(
     content_type: str,
     cms_body: str,
 ) -> None:
@@ -221,15 +229,14 @@ def test_malformed_cms_response_skips_game_and_recovers_next_poll(
 
     epic = EpicFreeGames(EpicSettings(), transport=httpx.MockTransport(handler))
 
-    # A malformed response must not produce or cache the incorrect /p/ fallback.
-    assert epic.format_free_games() == []
+    fallback = f"{epic.settings.base_url}/p/some-bundle"
+    assert [fallback] == [game.game_url for game in epic.format_free_games()]
 
     healthy = True
     games = epic.format_free_games()
     expected = f"{epic.settings.base_url}/bundles/some-bundle"
     assert [game.game_url for game in games] == [expected]
 
-    # Successful resolution is still cached on subsequent polls.
     cms_requests.clear()
     assert [game.game_url for game in epic.format_free_games()] == [expected]
     assert cms_requests == []
