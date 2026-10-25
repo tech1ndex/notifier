@@ -18,7 +18,7 @@ exclude_lines = [
 
 [tool.poetry]
 name = "notifier"
-version = "0.23.4"
+version = "0.23.5"
 description = "Notifies a Signal Group when new Free Games are available on Epic Games Store."
 package-mode = false
 packages = [
@@ -55,11 +55,11 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python="^3.12"
-pydantic = "^2.13.4"
+pydantic = "^2.13.5"
 requests = "^2.32.5"
 httpx = "^0.28.1"
 pydantic-settings = "^2.15.0"
-types-requests = "^2.33.0.20260712"
+types-requests = "^2.33.0.20260906"
 loguru = "^0.7.3"
 tenacity = "^9.1.4"
 pytest-mock = "^3.15.0"
@@ -76,7 +76,7 @@ optional = true
 
 
 [tool.poetry.group.linters.dependencies]
-ruff = "^0.16.4"
+ruff = "^0.16.8"
 
 
 [tool.poetry.group.tests]
@@ -88,7 +88,7 @@ notifier = "notifier.main:main"
 [tool.poetry.group.tests.dependencies]
 pytest = "^9.1.1"
 pytest-cov = "^7.1.0"
-tox = "^4.60.0"
+tox = "^4.64.1"
 tox-gh-actions = "^3.2.0"
 
 
