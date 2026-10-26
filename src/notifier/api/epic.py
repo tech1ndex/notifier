@@ -49,10 +49,8 @@ def is_retryable_error(exc: BaseException) -> bool:
 
 def parse_service_response(error: dict) -> Any:
     raw = error.get("serviceResponse")
-    if not raw:
-        return None
-    if isinstance(raw, dict | list):
-        return raw
+    if not raw or isinstance(raw, dict | list):
+        return raw or None
     try:
         return json.loads(raw)
     except (TypeError, ValueError):
@@ -74,8 +72,9 @@ def clean_spurious_errors(payload: Any) -> Any:
     kept = [error for error in payload["errors"] if not is_spurious_error(error)]
     if kept:
         payload["errors"] = kept
-    else:
-        payload.pop("errors")
+        return payload
+
+    payload.pop("errors")
     return payload
 
 
@@ -90,14 +89,17 @@ def raise_for_response_errors(payload: Any) -> None:
         message = error.get("message", "Unknown Epic Games Store error")
         raise EpicApiError(message, service_response=error)
 
-    if isinstance(service_response, dict):
-        if str(service_response.get("errorCode", "")).endswith("not_found"):
-            raise EpicNotFoundError(
-                service_response.get("errorMessage", "Resource not found"),
-                service_response.get("numericErrorCode"),
-                service_response,
-            )
-    elif service_response == "not found":
+    if (
+        isinstance(service_response, dict)
+        and str(service_response.get("errorCode", "")).endswith("not_found")
+    ):
+        raise EpicNotFoundError(
+            service_response.get("errorMessage", "Resource not found"),
+            service_response.get("numericErrorCode"),
+            service_response,
+        )
+
+    if service_response == "not found":
         msg = "The resource was not found, no more data provided by Epic Games Store."
         raise EpicNotFoundError(msg)
 
@@ -194,15 +196,17 @@ class EpicFreeGames:
         if g.get("price") is not None and g["price"].get("lineOffers") is None:
             g["price"]["lineOffers"] = []
 
-        if g.get("promotions") is not None:
-            if g["promotions"].get("promotionalOffers") is None:
-                g["promotions"]["promotionalOffers"] = []
-            if g["promotions"].get("upcomingPromotionalOffers") is None:
-                g["promotions"]["upcomingPromotionalOffers"] = []
+        promotions = g.get("promotions")
+        if promotions is None:
+            return g
 
-            for group in g["promotions"].get("promotionalOffers", []):
-                if group.get("promotionalOffers") is None:
-                    group["promotionalOffers"] = []
+        for key in ("promotionalOffers", "upcomingPromotionalOffers"):
+            if promotions.get(key) is None:
+                promotions[key] = []
+
+        for group in promotions["promotionalOffers"]:
+            if group.get("promotionalOffers") is None:
+                group["promotionalOffers"] = []
 
         return g
 
@@ -246,11 +250,7 @@ class EpicFreeGames:
     def get_game_slug(game: EpicGameData) -> str:
         if game.product_slug:
             slug = game.product_slug
-        elif (
-            game.catalog_ns
-            and game.catalog_ns.mappings
-            and len(game.catalog_ns.mappings) > 0
-        ):
+        elif game.catalog_ns and game.catalog_ns.mappings:
             slug = game.catalog_ns.mappings[0].page_slug
         else:
             slug = game.url_slug
