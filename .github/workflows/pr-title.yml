@@ -33,7 +33,7 @@ jobs:
               echo '| --- | --- |'
               echo '| `fix: broken bundle URLs` | patch |'
               echo '| `chore(deps): bump ruff` | patch |'
-              echo '| `feat: migrate off epicstore` | minor |'
+              echo '| `feat: add notification channels` | minor |'
               echo '| `feat!: drop python 3.11` | major |'
               echo
               echo "Allowed types: \`${TYPES//|/\`, \`}\`."

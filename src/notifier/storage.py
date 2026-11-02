@@ -36,21 +36,45 @@ class SentGamesStorage:
         finally:
             Path(tmp).unlink(missing_ok=True)
 
-    def get_game_state(self, url: str) -> str | None:
-        return self._states.get(url)
+    def get_game_state(self, game_key: str) -> str | None:
+        return self._states.get(game_key)
 
-    def set_game_state(self, url: str, state: str) -> None:
-        self._states[url] = state
+    def get_or_migrate_game_state(
+        self,
+        game_key: str,
+        legacy_keys: tuple[str, ...],
+    ) -> str | None:
+        if game_key in self._states:
+            return self._states[game_key]
+
+        legacy_states = {self._states.get(key) for key in legacy_keys}
+        state = next(
+            (
+                state
+                for state in ("sent", "pending", "failed")
+                if state in legacy_states
+            ),
+            None,
+        )
+        if state is not None:
+            self._states[game_key] = state
+            for key in legacy_keys:
+                self._states.pop(key, None)
+            self.save_states()
+        return state
+
+    def set_game_state(self, game_key: str, state: str) -> None:
+        self._states[game_key] = state
         self.save_states()
 
-    def is_game_sent(self, url: str) -> bool:
-        return self._states.get(url) == "sent"
+    def is_game_sent(self, game_key: str) -> bool:
+        return self._states.get(game_key) == "sent"
 
-    def mark_game_sent(self, url: str) -> None:
-        self.set_game_state(url, "sent")
+    def mark_game_sent(self, game_key: str) -> None:
+        self.set_game_state(game_key, "sent")
 
-    def mark_game_pending(self, url: str) -> None:
-        self.set_game_state(url, "pending")
+    def mark_game_pending(self, game_key: str) -> None:
+        self.set_game_state(game_key, "pending")
 
-    def mark_game_failed(self, url: str) -> None:
-        self.set_game_state(url, "failed")
+    def mark_game_failed(self, game_key: str) -> None:
+        self.set_game_state(game_key, "failed")

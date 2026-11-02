@@ -141,7 +141,21 @@ class EpicGameData(BaseModel):
 
 
 class FormattedGame(BaseModel):
+    game_id: str
+    game_namespace: str
     game_title: str
     game_price: str
     end_date: datetime
     game_url: str
+
+    @property
+    def storage_key(self) -> str:
+        return f"{self.game_namespace}:{self.game_id}"
+
+    @property
+    def legacy_urls(self) -> tuple[str, ...]:
+        prefix, _, slug = self.game_url.rpartition("/")
+        base, _, route = prefix.rpartition("/")
+        if route in ("p", "bundles"):
+            return (f"{base}/p/{slug}", f"{base}/bundles/{slug}")
+        return (self.game_url,)
